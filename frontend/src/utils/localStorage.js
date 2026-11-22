@@ -18,13 +18,17 @@
  */
 
 const KEYS = {
-  PLAYER_NAME:   'mgp_player_name',
-  SOUND_ENABLED: 'mgp_sound_enabled',
-  MUSIC_ENABLED: 'mgp_music_enabled',
+  PLAYER_NAME:    'mgp_player_name',
+  NAME_CONFIRMED: 'mgp_name_confirmed',
+  SOUND_ENABLED:  'mgp_sound_enabled',
+  MUSIC_ENABLED:  'mgp_music_enabled',
 }
 
 export function getPlayerName()       { return localStorage.getItem(KEYS.PLAYER_NAME) || null }
 export function setPlayerName(name)   { localStorage.setItem(KEYS.PLAYER_NAME, name) }
+
+export function isNameConfirmed()     { return localStorage.getItem(KEYS.NAME_CONFIRMED) === 'true' }
+export function setNameConfirmed(val) { localStorage.setItem(KEYS.NAME_CONFIRMED, String(val)) }
 
 export function getSoundEnabled()     { return localStorage.getItem(KEYS.SOUND_ENABLED) !== 'false' }
 export function setSoundEnabled(val)  { localStorage.setItem(KEYS.SOUND_ENABLED, String(val)) }

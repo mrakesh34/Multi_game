@@ -1,32 +1,15 @@
 /**
  * FILE: frontend/src/components/chat/ChatDrawer.jsx
- * PURPOSE: Slide-in chat panel on the right side of the in-game layout.
- *          Contains the message list and input field.
- *
- * VISIBILITY:
- *   Controlled by useChatStore().isOpen.
- *   Toggle button in the GameLayout top bar (or inside this component).
- *   When closed: shows just a narrow toggle tab with unread count badge.
- *
- * ANIMATION (see IMPLEMENTATION_PLAN.md §10):
- *   Framer Motion: x: 320 → 0 on open, x: 0 → 320 on close, duration 0.3s ease-out.
- *   Width: 320px fixed.
- *
- * AUTO-SCROLL:
- *   The message list scrolls to the bottom whenever a new message is added.
- *   Implemented with a ref on the last message and scrollIntoView on effect.
- *
- * PROPS: none — reads from chatStore and roomStore directly
- *
- * USAGE:
- *   Rendered once inside GameLayout. Always mounted; visibility is animated.
+ * PURPOSE: Transparent, floating overlay chat panel.
+ *          Does NOT cause layout shifts or resize the game board when open or closed.
  */
 
 import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { MessageSquare, X } from 'lucide-react'
 import { useChatStore } from '../../store'
 import ChatMessage from './ChatMessage'
-import ChatInput   from './ChatInput'
+import ChatInput from './ChatInput'
 
 export default function ChatDrawer() {
   const { messages, isOpen, unreadCount, setOpen, markRead } = useChatStore()
@@ -41,49 +24,67 @@ export default function ChatDrawer() {
   }, [messages, isOpen])
 
   return (
-    <div className="relative flex-shrink-0">
-      {/* Toggle tab */}
-      <button
-        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full bg-slate-800 border border-white/10 rounded-l-xl px-2 py-4 text-slate-400 hover:text-white transition-colors z-10"
-        onClick={() => setOpen(!isOpen)}
-      >
-        <span className="vertical-text text-xs">💬 Chat</span>
-        {!isOpen && unreadCount > 0 && (
-          <span className="absolute -top-2 -left-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
-      </button>
+    <div className="absolute top-0 right-0 bottom-0 z-40 pointer-events-none flex justify-end">
+      {/* Floating Toggle Tab when closed */}
+      {!isOpen && (
+        <button
+          className="pointer-events-auto absolute right-4 top-4 z-40 flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-black/50 hover:bg-black/70 border border-white/15 text-zinc-200 hover:text-white shadow-2xl backdrop-blur-xl transition-all text-xs font-semibold group active:scale-95"
+          onClick={() => setOpen(true)}
+          title="Open room chat"
+        >
+          <MessageSquare className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
+          <span>Chat</span>
+          {unreadCount > 0 && (
+            <span className="w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center font-mono font-bold animate-pulse">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+      )}
 
-      {/* Drawer panel */}
+      {/* Floating Transparent Drawer Panel (Overlay) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="w-80 h-full border-l border-white/10 flex flex-col"
-            style={{ background: 'var(--bg-secondary)' }}
-            initial={{ x: 320, opacity: 0 }}
+            className="pointer-events-auto w-80 sm:w-88 h-full bg-black/40 backdrop-blur-xl border-l border-white/10 shadow-2xl flex flex-col"
+            initial={{ x: '100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 320, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            exit={{ x: '100%', opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 30 }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-              <span className="font-semibold text-white text-sm">💬 Chat</span>
-              <button className="text-slate-400 hover:text-white" onClick={() => setOpen(false)}>✕</button>
+            {/* Transparent Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/[0.03] backdrop-blur-md">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-blue-400" />
+                <span className="font-semibold text-white text-xs tracking-tight">Room Chat</span>
+                <span className="text-[10px] text-zinc-400 font-mono">({messages.length})</span>
+              </div>
+              <button
+                className="p-1 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
+                onClick={() => setOpen(false)}
+                title="Minimize chat"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-              {messages.length === 0 && (
-                <p className="text-slate-600 text-sm text-center mt-8">No messages yet. Say hi! 👋</p>
+            {/* Messages Body (Transparent) */}
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scrollbar-thin bg-transparent">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center text-zinc-400 my-auto">
+                  <div className="w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center mb-2">
+                    <MessageSquare className="w-5 h-5 text-zinc-400" />
+                  </div>
+                  <p className="text-xs font-medium text-zinc-300">No messages yet.</p>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">Say hello to the room!</p>
+                </div>
+              ) : (
+                messages.map((msg, i) => <ChatMessage key={i} message={msg} />)
               )}
-              {messages.map((msg, i) => (
-                <ChatMessage key={i} message={msg} />
-              ))}
               <div ref={bottomRef} />
             </div>
 
-            {/* Input */}
+            {/* Transparent Input Footer */}
             <ChatInput />
           </motion.div>
         )}

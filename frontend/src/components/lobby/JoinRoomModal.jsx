@@ -100,7 +100,7 @@ export default function JoinRoomModal({ isOpen, onClose, game, playerName, onErr
           <input
             key={i}
             ref={inputRefs[i]}
-            className="w-16 h-16 text-center text-3xl font-mono font-bold bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-16 h-16 text-center text-3xl font-mono font-black bg-zinc-950 border border-zinc-800 rounded-2xl text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-inner"
             value={d}
             maxLength={1}
             inputMode="numeric"

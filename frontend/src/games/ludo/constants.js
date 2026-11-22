@@ -35,6 +35,8 @@ export const COLOR_HEX = {
 
 export const PLAYER_STARTS = [0, 13, 26, 39]
 
+export const OUTER_TRACK_LEN = 52
+
 export const SAFE_SQUARES = [0, 8, 13, 21, 26, 34, 39, 47]
 
 /**

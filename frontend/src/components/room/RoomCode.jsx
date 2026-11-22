@@ -1,20 +1,10 @@
 /**
  * FILE: frontend/src/components/room/RoomCode.jsx
- * PURPOSE: Displays the 3-digit room code prominently with a copy button.
- *          This component is shown in RoomLobby for sharing.
- *
- * PROPS:
- *   roomId : string — 3-digit room code, e.g. "742"
- *
- * DISPLAY (see IMPLEMENTATION_PLAN.md §9.6):
- *   Each digit in its own box with large monospace font and glow on hover.
- *   [Copy] button copies the code to the clipboard.
- *
- * USAGE:
- *   <RoomCode roomId="742" />
+ * PURPOSE: Minimal, crisp 3-digit room code display with copy feedback.
  */
 
 import { useState } from 'react'
+import { Copy, Check } from 'lucide-react'
 import { getRoomDigits } from '../../utils/roomCode'
 
 export default function RoomCode({ roomId }) {
@@ -22,30 +12,45 @@ export default function RoomCode({ roomId }) {
   const digits = getRoomDigits(roomId)
 
   function handleCopy() {
-    navigator.clipboard.writeText(roomId).then(() => {
+    navigator.clipboard?.writeText(roomId).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
   }
 
   return (
-    <div className="text-center">
-      <p className="text-slate-400 text-sm mb-2 uppercase tracking-widest">Room Code</p>
-      <div className="flex gap-3 justify-center mb-3">
+    <div className="flex flex-col items-center text-center">
+      <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-2">
+        Invite Code
+      </span>
+
+      <div className="flex gap-2.5 justify-center mb-3">
         {digits.map((d, i) => (
           <div
             key={i}
-            className="w-16 h-16 flex items-center justify-center rounded-xl bg-white/5 border border-white/20 font-mono text-4xl font-bold text-white hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/20 transition-all"
+            className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center rounded-2xl bg-zinc-950 border border-zinc-800 font-mono text-3xl sm:text-4xl font-black text-white shadow-inner"
           >
             {d}
           </div>
         ))}
       </div>
+
       <button
+        type="button"
         onClick={handleCopy}
-        className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-800 hover:bg-zinc-750 border border-zinc-700/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all shadow-sm active:scale-95"
       >
-        {copied ? '✓ Copied!' : 'Copy Code'}
+        {copied ? (
+          <>
+            <Check className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-emerald-400">Copied!</span>
+          </>
+        ) : (
+          <>
+            <Copy className="w-3.5 h-3.5 text-zinc-400" />
+            <span>Copy Code</span>
+          </>
+        )}
       </button>
     </div>
   )

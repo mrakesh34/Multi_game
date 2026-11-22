@@ -1,20 +1,10 @@
 /**
  * FILE: frontend/src/games/bingo/BingoCard.jsx
- * PURPOSE: Renders a player's 5×5 Bingo card (numbers 1 to 25).
- *          Clicking an uncrossed number on your turn calls/picks that number!
- *
- * PROPS:
- *   card         : 5x5 array of numbers 1..25
- *   marked       : 5x5 array of booleans
- *   winningCoords: Set of string keys "r-c" indicating cells in completed lines
- *   isMyTurn     : boolean (whether local player can click uncrossed numbers)
- *   onCellClick  : function(number) callback when an uncrossed cell is clicked
- *   isMini       : boolean (for preview cards of opponents)
- *   playerName   : string
+ * PURPOSE: Minimal, high-contrast 5×5 Bingo card component.
  */
 
 import { motion } from 'framer-motion'
-import clsx from 'clsx'
+import { Check } from 'lucide-react'
 
 export default function BingoCard({
   card,
@@ -28,15 +18,26 @@ export default function BingoCard({
   if (!card) return null
 
   return (
-    <div className={clsx('glass-card p-4 rounded-2xl flex flex-col', isMini ? 'max-w-[190px]' : 'max-w-md w-full')}>
+    <div
+      className={`relative flex flex-col bg-zinc-900/80 border border-zinc-800/80 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden ${
+        isMini ? 'p-3 max-w-[200px]' : 'p-4 sm:p-5 max-w-md w-full'
+      }`}
+    >
       {playerName && (
-        <h4 className="text-xs font-semibold text-slate-300 mb-2 truncate text-center">
-          {playerName}'s Card
-        </h4>
+        <div className="flex items-center justify-between pb-3 mb-3 border-b border-zinc-800/60">
+          <span className="text-xs font-semibold text-zinc-300 truncate font-mono">
+            {playerName}'s Card
+          </span>
+          {isMyTurn && !isMini && (
+            <span className="text-[10px] font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full animate-pulse">
+              Your Turn to Call
+            </span>
+          )}
+        </div>
       )}
 
-      {/* 5×5 Cell Grid */}
-      <div className="grid grid-cols-5 gap-2 flex-1">
+      {/* 5×5 Grid */}
+      <div className="grid grid-cols-5 gap-2 sm:gap-2.5 flex-1">
         {card.map((row, r) =>
           row.map((val, c) => {
             const isMarked = marked?.[r]?.[c]
@@ -44,32 +45,43 @@ export default function BingoCard({
             const canClick = !isMini && isMyTurn && !isMarked
 
             return (
-              <motion.div
+              <motion.button
                 key={`${r}-${c}`}
-                className={clsx(
-                  'bingo-cell rounded-xl font-mono font-bold transition-all relative overflow-hidden select-none border',
-                  isMini ? 'text-[11px] p-1 h-8' : 'text-lg sm:text-xl h-14',
-                  isWinCell
-                    ? 'bg-yellow-400 text-slate-950 font-black ring-2 ring-yellow-200 shadow-lg shadow-yellow-500/50 border-yellow-300'
-                    : isMarked
-                    ? 'bg-slate-800 text-slate-500 line-through border-white/5 opacity-80'
-                    : canClick
-                    ? 'bg-blue-600/20 hover:bg-blue-500 text-white cursor-pointer hover:scale-105 hover:shadow-lg hover:shadow-blue-500/40 border-blue-400/50'
-                    : 'bg-white/5 text-slate-200 border-white/10 cursor-default'
-                )}
-                whileHover={canClick ? { scale: 1.08 } : {}}
-                whileTap={canClick ? { scale: 0.95 } : {}}
+                type="button"
+                disabled={!canClick}
+                whileHover={canClick ? { scale: 1.06, y: -1 } : {}}
+                whileTap={canClick ? { scale: 0.94 } : {}}
                 onClick={() => canClick && onCellClick?.(val)}
+                className={`relative aspect-square flex items-center justify-center rounded-xl font-mono font-bold transition-all select-none border ${
+                  isMini
+                    ? 'text-[11px] h-8'
+                    : 'text-base sm:text-xl h-12 sm:h-14'
+                } ${
+                  isWinCell
+                    ? 'bg-amber-500/20 border-amber-500/70 text-amber-300 ring-2 ring-amber-500/30 shadow-lg shadow-amber-500/20'
+                    : isMarked
+                    ? 'bg-zinc-950/60 border-zinc-800/40 text-zinc-600 line-through opacity-70'
+                    : canClick
+                    ? 'bg-zinc-800/90 hover:bg-zinc-750 border-blue-500/40 hover:border-blue-400 text-white cursor-pointer shadow-sm hover:shadow-blue-500/20 ring-1 ring-blue-500/20'
+                    : 'bg-zinc-950/70 border-zinc-800/60 text-zinc-300 cursor-default'
+                }`}
               >
                 <span>{val}</span>
 
-                {/* Strikethrough diagonal slash on marked numbers */}
+                {/* Strikethrough diagonal indicator for marked cell */}
                 {isMarked && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-full h-0.5 bg-red-500 transform -rotate-45" />
+                    <div className="w-[80%] h-[1.5px] bg-red-500/60 transform -rotate-45" />
                   </div>
                 )}
-              </motion.div>
+
+                {/* Subdued checkmark for completed winning cells */}
+                {isWinCell && (
+                  <div className="absolute top-1 right-1 pointer-events-none">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 block" />
+                  </div>
+                )}
+              </motion.button>
             )
           })
         )}
