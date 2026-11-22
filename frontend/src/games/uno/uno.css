@@ -1,0 +1,36 @@
+/*
+ * FILE: frontend/src/games/uno/uno.css
+ * PURPOSE: Card dimensions, quadrant background, and hand fan styling for UNO.
+ */
+
+.uno-card {
+  width: 90px;
+  height: 135px;
+  border-radius: 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.uno-card-center-oval {
+  width: 72px;
+  height: 110px;
+  background: #ffffff;
+  border-radius: 50%;
+  transform: rotate(25deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.uno-wild-quadrants {
+  background: conic-gradient(
+    #ef4444 0% 25%,
+    #3b82f6 25% 50%,
+    #eab308 50% 75%,
+    #22c55e 75% 100%
+  );
+}

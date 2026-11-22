@@ -1,0 +1,88 @@
+/*
+ * FILE: frontend/src/index.css
+ * PURPOSE: Global CSS — Tailwind directives, CSS custom properties (design tokens),
+ *          and app-wide base styles. This file is imported once in main.jsx.
+ *
+ * SECTIONS:
+ *   1. Tailwind directives (@tailwind base/components/utilities)
+ *   2. CSS variables (design tokens — colors, radii, shadows)
+ *      These map to Tailwind's theme.extend.colors in tailwind.config.js
+ *   3. Base element resets (body background, font, scrollbar)
+ *   4. Particle float animation (used by LobbyLayout background dots)
+ *   5. Dice roll animation (used by LudoDice.jsx)
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── 1. Design Tokens ──────────────────────────────────────────────────────── */
+:root {
+  --bg-primary:   #0a0a0f;
+  --bg-secondary: #13131a;
+  --bg-glass:     rgba(255, 255, 255, 0.05);
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --text-primary: #f1f5f9;
+  --text-muted:   #64748b;
+  --accent-blue:  #3b82f6;
+  --accent-purple:#8b5cf6;
+  --accent-green: #22c55e;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+}
+
+/* ── 2. Base Styles ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+/* ── 3. Particle Float Animation ───────────────────────────────────────────── */
+/* Used by LobbyLayout.jsx — 30 floating dot divs */
+@keyframes float {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(8px, -10px); }
+  50%  { transform: translate(-5px, -18px); }
+  75%  { transform: translate(12px, -8px); }
+  100% { transform: translate(-3px, -20px); }
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: white;
+  pointer-events: none;
+  animation: float var(--duration, 12s) ease-in-out infinite alternate;
+}
+
+/* ── 4. Ludo Dice Roll Animation ───────────────────────────────────────────── */
+/* Used by LudoDice.jsx — 3D CSS rotation */
+@keyframes dice-roll {
+  0%   { transform: rotateX(0deg) rotateY(0deg); }
+  33%  { transform: rotateX(240deg) rotateY(120deg); }
+  66%  { transform: rotateX(480deg) rotateY(240deg); }
+  100% { transform: rotateX(720deg) rotateY(360deg); }
+}
+
+.dice-rolling {
+  animation: dice-roll 0.8s ease-in-out;
+}
+
+/* ── 5. Glassmorphism card utility ─────────────────────────────────────────── */
+.glass-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius-md);
+}

@@ -1,0 +1,24 @@
+/*
+ * FILE: frontend/src/games/bingo/bingo.css
+ * PURPOSE: Styles and animations for 1–25 Bingo cards and B-I-N-G-O letters.
+ */
+
+.bingo-cell {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bingo-letter-box {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
