@@ -22,6 +22,7 @@ const KEYS = {
   NAME_CONFIRMED: 'mgp_name_confirmed',
   SOUND_ENABLED:  'mgp_sound_enabled',
   MUSIC_ENABLED:  'mgp_music_enabled',
+  LAST_ROOM_CODE: 'mgp_last_room_code',
 }
 
 export function getPlayerName()       { return localStorage.getItem(KEYS.PLAYER_NAME) || null }
@@ -31,7 +32,15 @@ export function isNameConfirmed()     { return localStorage.getItem(KEYS.NAME_CO
 export function setNameConfirmed(val) { localStorage.setItem(KEYS.NAME_CONFIRMED, String(val)) }
 
 export function getSoundEnabled()     { return localStorage.getItem(KEYS.SOUND_ENABLED) !== 'false' }
-export function setSoundEnabled(val)  { localStorage.setItem(KEYS.SOUND_ENABLED, String(val)) }
+export function setSoundEnabled(val)  {
+  localStorage.setItem(KEYS.SOUND_ENABLED, String(val))
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('mgp_sound_change', { detail: { enabled: val } }))
+  }
+}
 
 export function getMusicEnabled()     { return localStorage.getItem(KEYS.MUSIC_ENABLED) !== 'false' }
 export function setMusicEnabled(val)  { localStorage.setItem(KEYS.MUSIC_ENABLED, String(val)) }
+
+export function getLastRoomCode()     { return localStorage.getItem(KEYS.LAST_ROOM_CODE) || null }
+export function setLastRoomCode(code) { if (code) localStorage.setItem(KEYS.LAST_ROOM_CODE, String(code)) }

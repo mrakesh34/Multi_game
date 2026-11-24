@@ -7,14 +7,12 @@
 
 import React, { useMemo, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Trophy, MessageSquare } from 'lucide-react'
-import { useRoomStore, usePlayerStore, useChatStore } from '../../store'
+import { useRoomStore, usePlayerStore } from '../../store'
 import socket from '../../socket/socket'
 import { EVENTS } from '../../socket/events'
 import { getWinningLines, countCompletedLines } from './gameLogic'
 import { useGameAudio } from './useGameAudio'
 import BingoBoard from './BingoBoard'
-import RecentCallsTray from './RecentCallsTray'
 import TurnStatusBar from './TurnStatusBar'
 import WinScreen from '../_shared/WinScreen'
 
@@ -23,7 +21,6 @@ const BINGO_LETTERS = ['B', 'I', 'N', 'G', 'O'] as const
 export const BingoGame: React.FC = () => {
   const { gameState, status, roomId } = useRoomStore()
   const { socketId, name: myName } = usePlayerStore()
-  const { isOpen: isChatOpen, setOpen: setChatOpen, unreadCount } = useChatStore()
 
   // Procedural Web Audio API Hook (zero dependencies)
   const audio = useGameAudio()
@@ -59,12 +56,6 @@ export const BingoGame: React.FC = () => {
       ) || gameState.players[0]
     )
   }, [gameState?.players, socketId, myName])
-
-  // Opponent player states
-  const otherPlayers = useMemo(() => {
-    if (!gameState?.players) return []
-    return gameState.players.filter((p) => p.name !== myPlayerState?.name)
-  }, [gameState?.players, myPlayerState?.name])
 
   // Completed winning line coordinates for local player's card
   const winningCoords = useMemo(() => {
@@ -134,8 +125,8 @@ export const BingoGame: React.FC = () => {
         }}
       />
 
-      {/* ── Top Hardware Strip: LED Status Pill & Tally Lamps ── */}
-      <div className="w-full relative z-10 flex flex-col items-center gap-3">
+      {/* ── Top Hardware Strip: Unified Tabletop Control HUD ── */}
+      <div className="w-full relative z-10 flex flex-col items-center">
         <TurnStatusBar
           isMyTurn={isMyTurn && !myPlayerState?.is_finished}
           callerName={callerPlayer?.name || 'Opponent'}
@@ -144,19 +135,13 @@ export const BingoGame: React.FC = () => {
           linesCount={myLinesCount}
           canShuffle={canShuffle}
           onShuffle={handleShuffle}
-          isMuted={audio.isMuted}
-          onToggleMute={audio.toggleMute}
-        />
-
-        {/* ── Recent Calls Ceramic Ball Tray ── */}
-        <RecentCallsTray
           calledNumbers={gameState.called_numbers || []}
           totalPossible={25}
         />
       </div>
 
       {/* ── Main Playing Area: 5×5 Board as Centerpiece ── */}
-      <div className="relative z-10 w-full flex-1 flex flex-col lg:flex-row items-center justify-center gap-6 sm:gap-10 my-auto py-2">
+      <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-center my-auto py-2">
         {/* Central 5×5 Recessed Board */}
         <div className="flex flex-col items-center w-full max-w-md sm:max-w-lg">
           <BingoBoard
@@ -169,90 +154,15 @@ export const BingoGame: React.FC = () => {
             onLineComplete={audio.playLineComplete}
           />
         </div>
-
-        {/* Tactile Opponents Sub-Display Rail */}
-        {otherPlayers.length > 0 && (
-          <div className="flex flex-col gap-2.5 w-full max-w-xs select-none">
-            <div className="flex items-center gap-1.5 px-2 text-[11px] font-mono font-semibold uppercase tracking-wider text-zinc-400">
-              <Users className="w-3.5 h-3.5 text-zinc-400" />
-              <span>Opponent Monitors ({otherPlayers.length})</span>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {otherPlayers.map((op) => (
-                <div
-                  key={op.name}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-[#171a21] border border-white/[0.05] shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]"
-                >
-                  <div className="flex flex-col min-w-0 pr-2">
-                    <span className="text-xs font-mono font-bold text-[#e2e8f0] truncate">
-                      {op.name}
-                    </span>
-                    <span
-                      className="text-[11px] font-mono text-zinc-400"
-                      style={{ fontVariantNumeric: 'tabular-nums' }}
-                    >
-                      {op.lines_count || 0}/5 lines stamped
-                    </span>
-                  </div>
-
-                  {/* Opponent Mini B-I-N-G-O Indicator Keycaps */}
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    {BINGO_LETTERS.map((letter, idx) => {
-                      const isComplete = (op.lines_count || 0) > idx
-                      return (
-                        <span
-                          key={letter}
-                          className={`w-5 h-5 rounded-md text-[10px] font-mono font-bold flex items-center justify-center border transition-all ${
-                            isComplete
-                              ? 'bg-[#b45309] border-amber-600/50 text-[#fffbeb] shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]'
-                              : 'bg-[#12151c] border-white/[0.04] text-[#475569]'
-                          }`}
-                        >
-                          {letter}
-                        </span>
-                      )
-                    })}
-
-                    {op.has_bingo && (
-                      <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-mono font-bold flex items-center gap-0.5">
-                        <Trophy className="w-3 h-3 text-amber-400" />
-                        <span>#{op.rank || 1}</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* ── Tabletop Quiet Footer: Hardware Specs & Chat Toggle ── */}
-      <div className="relative z-10 w-full max-w-xl mx-auto flex items-center justify-between pt-2 px-2 text-[11px] font-mono text-zinc-500 border-t border-white/[0.04]">
+      {/* ── Tabletop Quiet Footer: Hardware Specs ── */}
+      <div className="relative z-10 w-full max-w-xl mx-auto flex items-center justify-center pt-2 px-2 text-[11px] font-mono text-zinc-500 border-t border-white/[0.04]">
         <div className="flex items-center gap-3">
           <span>ROOM #{roomId || 'LOCAL'}</span>
           <span>•</span>
           <span>SPEC: 1–25 PBT</span>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setChatOpen(!isChatOpen)}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#171a21] hover:bg-[#202531] border border-white/[0.06] text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
-          title="Toggle Room Chat Drawer"
-        >
-          <MessageSquare className="w-3 h-3 text-amber-400" />
-          <span>Chat</span>
-          {!isChatOpen && unreadCount > 0 && (
-            <span
-              className="px-1.5 py-0.2 rounded-full bg-amber-500 text-[#111318] text-[9px] font-bold"
-              style={{ fontVariantNumeric: 'tabular-nums' }}
-            >
-              {unreadCount}
-            </span>
-          )}
-        </button>
       </div>
 
       {/* ── Game Over Screen (podium finish) ── */}

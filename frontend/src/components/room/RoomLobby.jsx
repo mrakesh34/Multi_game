@@ -3,26 +3,42 @@
  * PURPOSE: Minimal, responsive waiting room page shown after creating or joining a room.
  */
 
-import { useState } from 'react'
-import { useNavigate, Navigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { LogOut, Play, Users, CheckCircle2, Circle } from 'lucide-react'
+import { LogOut, Play, Users, CheckCircle2, Circle, AlertCircle, Home } from 'lucide-react'
 import LobbyLayout from '../layout/LobbyLayout'
 import RoomCode from './RoomCode'
 import PlayerSlot from './PlayerSlot'
 import Toast from '../ui/Toast'
+import Modal from '../ui/Modal'
+import Button from '../ui/Button'
+import Spinner from '../ui/Spinner'
 import socket from '../../socket/socket'
 import { EVENTS } from '../../socket/events'
-import { useRoomStore, usePlayerStore } from '../../store'
+import { useRoomStore, usePlayerStore, useChatStore } from '../../store'
 import { useRoom } from '../../hooks/useRoom'
 import { GAMES_MAP } from '../../config/games'
+import { getPlayerName, setPlayerName } from '../../utils/localStorage'
+import { generateName } from '../../utils/nameGenerator'
 
 export default function RoomLobby() {
   const navigate = useNavigate()
+  const { game: routeGame, roomId: routeRoomId } = useParams()
+
   const { roomId, game, players } = useRoomStore()
-  const { socketId, name: myName } = usePlayerStore()
+  const setRoom = useRoomStore((s) => s.setRoom)
+  const setPlayers = useRoomStore((s) => s.setPlayers)
+  const setMessages = useChatStore((s) => s.setMessages)
+
+  const { socketId, name: myName, setName, setColorIndex } = usePlayerStore()
   const [toast, setToast] = useState(null)
   const [starting, setStarting] = useState(false)
+
+  // Direct joining states
+  const [joining, setJoining] = useState(false)
+  const [startedError, setStartedError] = useState(false)
+  const [joinError, setJoinError] = useState('')
 
   useRoom({
     onError: (code, msg) => {
@@ -31,7 +47,125 @@ export default function RoomLobby() {
     },
   })
 
-  if (!roomId) return <Navigate to="/" replace />
+  // Direct URL joining: if user lands directly on /:game/room/:roomId or /room/:roomId
+  useEffect(() => {
+    const targetRoomId = routeRoomId || roomId
+    if (!targetRoomId) return
+
+    // If store already has this room loaded, we are good
+    if (roomId === targetRoomId && players.length > 0) return
+
+    let activePlayerName = myName || getPlayerName()
+    if (!activePlayerName) {
+      activePlayerName = generateName()
+      setPlayerName(activePlayerName)
+      setName(activePlayerName)
+    }
+
+    if (!socket.connected) {
+      socket.connect()
+    }
+
+    setJoining(true)
+    setStartedError(false)
+    setJoinError('')
+
+    function onJoined(data) {
+      socket.off(EVENTS.ROOM_ERROR, onRoomError)
+      setJoining(false)
+      setRoom({ roomId: data.room_id, game: data.game, status: 'waiting' })
+      setPlayers(data.players)
+      setMessages(data.chat_log || [])
+      const me = data.players.find((p) => p.name === activePlayerName)
+      if (me) setColorIndex(me.color_index)
+
+      // Replace URL with semantic game route if needed
+      if (!routeGame || routeGame !== data.game) {
+        navigate(`/${data.game}/room/${data.room_id}`, { replace: true })
+      }
+    }
+
+    function onRoomError(data) {
+      socket.off(EVENTS.ROOM_JOINED, onJoined)
+      setJoining(false)
+      if (data.code === 'ROOM_STARTED') {
+        setStartedError(true)
+      } else {
+        setJoinError(data.message || 'Could not join room')
+      }
+    }
+
+    socket.once(EVENTS.ROOM_JOINED, onJoined)
+    socket.once(EVENTS.ROOM_ERROR, onRoomError)
+    socket.emit(EVENTS.JOIN_ROOM, { room_id: targetRoomId, player_name: activePlayerName })
+
+    return () => {
+      socket.off(EVENTS.ROOM_JOINED, onJoined)
+      socket.off(EVENTS.ROOM_ERROR, onRoomError)
+    }
+  }, [routeRoomId, roomId, myName])
+
+  // If game is already started, show friendly dialog
+  if (startedError) {
+    return (
+      <LobbyLayout>
+        <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-7 text-center shadow-2xl backdrop-blur-xl">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-3xl">
+            🎮
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2 tracking-tight">Game Already Started</h2>
+          <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
+            The match in room <strong className="text-white font-mono">#{routeRoomId}</strong> is already in progress and cannot accept new players right now.
+          </p>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={() => navigate('/')} className="flex-1">
+              Browse Games
+            </Button>
+            <Button variant="primary" onClick={() => navigate('/')} className="flex-1">
+              Create a Room
+            </Button>
+          </div>
+        </div>
+      </LobbyLayout>
+    )
+  }
+
+  // If room not found or join failed
+  if (joinError) {
+    return (
+      <LobbyLayout>
+        <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-7 text-center shadow-2xl backdrop-blur-xl">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+            <AlertCircle className="w-7 h-7" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2 tracking-tight">Room Unavailable</h2>
+          <p className="text-sm text-zinc-400 mb-6">{joinError}</p>
+          <Button variant="primary" onClick={() => navigate('/')} className="w-full">
+            Back to Home
+          </Button>
+        </div>
+      </LobbyLayout>
+    )
+  }
+
+  // Loading state when joining via link
+  if (joining || (!roomId && routeRoomId)) {
+    return (
+      <LobbyLayout>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <Spinner className="w-8 h-8 text-blue-500 mb-4" />
+          <p className="text-sm font-medium text-zinc-300">
+            Joining room <span className="font-mono text-white">#{routeRoomId}</span>...
+          </p>
+        </div>
+      </LobbyLayout>
+    )
+  }
+
+  if (!roomId) {
+    navigate('/')
+    return null
+  }
 
   const gameConfig = GAMES_MAP[game] || {}
   const me = players.find(
@@ -87,9 +221,9 @@ export default function RoomLobby() {
           </button>
         </div>
 
-        {/* Room Code */}
+        {/* Room Code with Copy Link */}
         <div className="py-2">
-          <RoomCode roomId={roomId} />
+          <RoomCode roomId={roomId} game={game} />
         </div>
 
         {/* Divider */}
@@ -163,7 +297,7 @@ export default function RoomLobby() {
 
           {isHost && connectedPlayers.length < 2 && (
             <p className="text-[11px] text-zinc-500 text-center font-medium mt-1">
-              Need at least 2 players to begin. Share the code!
+              Need at least 2 players to begin. Share the code or invite link!
             </p>
           )}
         </div>

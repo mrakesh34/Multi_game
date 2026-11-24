@@ -66,7 +66,8 @@ def register_handlers(sio: socketio.AsyncServer):
             if not name:
                 return await _emit_error(sid, "INVALID_NAME", "Name is required.")
 
-            room, player = room_manager.create_room(game, sid, name)
+            custom_room_id = data.get("room_id")
+            room, player = room_manager.create_room(game, sid, name, custom_room_id=custom_room_id)
             await sio.enter_room(sid, room.room_id)
 
             # Confirm to creator
@@ -83,7 +84,13 @@ def register_handlers(sio: socketio.AsyncServer):
             }, room=room.room_id)
 
         except ValueError as e:
-            await _emit_error(sid, str(e), str(e))
+            code = str(e)
+            msg = code
+            if code == "ROOM_ALREADY_EXISTS":
+                msg = "Room code already in use. Please pick another code."
+            elif code == "INVALID_ROOM_ID":
+                msg = "Room code must be 3 to 6 digits or characters."
+            await _emit_error(sid, code, msg)
 
     # ── join_room ─────────────────────────────────────────────────────────────
 
@@ -92,7 +99,12 @@ def register_handlers(sio: socketio.AsyncServer):
         room_manager.cleanup_expired_disconnects()
         data = data or {}
         try:
-            room_id = str(data.get("room_id", "")).zfill(3)
+            raw_room_id = str(data.get("room_id", "")).strip()
+            if raw_room_id.isdigit() and len(raw_room_id) < 3:
+                room_id = raw_room_id.zfill(3)
+            else:
+                room_id = raw_room_id
+
             name = data.get("player_name", "").strip()
 
             room, player = room_manager.join_room(room_id, sid, name)
@@ -111,7 +123,15 @@ def register_handlers(sio: socketio.AsyncServer):
             }, room=room.room_id)
 
         except ValueError as e:
-            await _emit_error(sid, str(e), str(e))
+            code = str(e)
+            msg = code
+            if code == "ROOM_STARTED":
+                msg = "Game has already started in this room."
+            elif code == "ROOM_NOT_FOUND":
+                msg = "Room not found. Please check the room code."
+            elif code == "ROOM_FULL":
+                msg = "This room is full."
+            await _emit_error(sid, code, msg)
 
     # ── reconnect_room ────────────────────────────────────────────────────────
 
@@ -120,7 +140,11 @@ def register_handlers(sio: socketio.AsyncServer):
         room_manager.cleanup_expired_disconnects()
         data = data or {}
         try:
-            room_id = str(data.get("room_id", "")).zfill(3)
+            raw_room_id = str(data.get("room_id", "")).strip()
+            if raw_room_id.isdigit() and len(raw_room_id) < 3:
+                room_id = raw_room_id.zfill(3)
+            else:
+                room_id = raw_room_id
             name = data.get("player_name", "").strip()
 
             player = room_manager.try_reconnect(room_id, name, sid)
@@ -320,3 +344,34 @@ def register_handlers(sio: socketio.AsyncServer):
             room.chat_log = room.chat_log[-MAX_CHAT_LOG:]
 
         await sio.emit("chat_broadcast", msg, room=room.room_id)
+
+    # ── play_again ────────────────────────────────────────────────────────────
+
+    @sio.on("play_again")
+    async def on_play_again(sid: str, data: dict = None):
+        room_manager.cleanup_expired_disconnects()
+        room = room_manager.get_room_by_socket(sid)
+        if room is None:
+            return await _emit_error(sid, "NOT_IN_ROOM", "You are not in a room.")
+
+        # Only the host can trigger rematch/replay
+        if room.host_socket_id != sid:
+            return await _emit_error(sid, "NOT_HOST", "Only the host can start a rematch.")
+
+        # Reset room state back to waiting
+        room.status = "waiting"
+        room.game_state = None
+        if room.room_id in _game_instances:
+            del _game_instances[room.room_id]
+
+        # Reset non-host players' ready status
+        for p in room.players:
+            if not p.is_host:
+                p.is_ready = False
+
+        await sio.emit("room_reset", {
+            "room_id": room.room_id,
+            "game": room.game,
+            "players": [_player_dict(p) for p in room.players],
+        }, room=room.room_id)
+

@@ -33,9 +33,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/"              element={<HomePage />} />
-        <Route path="/room/:roomId"  element={<RoomLobby />} />
-        <Route path="/game/:roomId"  element={<GameLayout />} />
+        <Route path="/"                   element={<HomePage />} />
+        {/* Game-specific routes */}
+        <Route path="/:game/room/:roomId" element={<RoomLobby />} />
+        <Route path="/:game/play/:roomId" element={<GameLayout />} />
+        {/* Fallback routes for general links */}
+        <Route path="/room/:roomId"       element={<RoomLobby />} />
+        <Route path="/game/:roomId"       element={<GameLayout />} />
       </Routes>
     </BrowserRouter>
   )

@@ -63,7 +63,16 @@ export function useRoom({ onError } = {}) {
       setStatus('playing')
       setGameState(data.game_state)
       const roomId = useRoomStore.getState().roomId
-      navigate(`/game/${roomId}`)
+      const game = useRoomStore.getState().game || 'bingo'
+      navigate(`/${game}/play/${roomId}`)
+    }
+    function onRoomReset(data) {
+      setStatus('waiting')
+      setGameState(null)
+      if (data.players) setPlayers(data.players)
+      const rId = data.room_id || useRoomStore.getState().roomId
+      const g = data.game || useRoomStore.getState().game
+      navigate(`/${g}/room/${rId}`)
     }
     function onGameStateUpdate(data) { setGameState(data.game_state) }
     function onGameOver(data)        { setStatus('finished') }
@@ -76,6 +85,7 @@ export function useRoom({ onError } = {}) {
     socket.on(EVENTS.PLAYER_DISCONNECTED,  onPlayerDisconnected)
     socket.on(EVENTS.PLAYER_RECONNECTED,   onPlayerReconnected)
     socket.on(EVENTS.GAME_STARTED,         onGameStarted)
+    socket.on(EVENTS.ROOM_RESET,           onRoomReset)
     socket.on(EVENTS.GAME_STATE_UPDATE,    onGameStateUpdate)
     socket.on(EVENTS.GAME_OVER,            onGameOver)
     socket.on(EVENTS.CHAT_BROADCAST,       onChatBroadcast)
@@ -88,6 +98,7 @@ export function useRoom({ onError } = {}) {
       socket.off(EVENTS.PLAYER_DISCONNECTED,  onPlayerDisconnected)
       socket.off(EVENTS.PLAYER_RECONNECTED,   onPlayerReconnected)
       socket.off(EVENTS.GAME_STARTED,         onGameStarted)
+      socket.off(EVENTS.ROOM_RESET,           onRoomReset)
       socket.off(EVENTS.GAME_STATE_UPDATE,    onGameStateUpdate)
       socket.off(EVENTS.GAME_OVER,            onGameOver)
       socket.off(EVENTS.CHAT_BROADCAST,       onChatBroadcast)

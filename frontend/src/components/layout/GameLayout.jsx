@@ -5,8 +5,8 @@
  *          when the transparent chat panel is toggled.
  */
 
-import { lazy, Suspense, useState } from 'react'
-import { useNavigate, Navigate } from 'react-router-dom'
+import { lazy, Suspense, useState, useEffect } from 'react'
+import { useNavigate, Navigate, useParams } from 'react-router-dom'
 import { Volume2, VolumeX, MessageSquare, ArrowLeft, Gamepad2, Copy, Check } from 'lucide-react'
 import { useRoomStore, usePlayerStore, useChatStore } from '../../store'
 import { GAMES_MAP } from '../../config/games'
@@ -15,6 +15,8 @@ import Spinner from '../ui/Spinner'
 import ChatDrawer from '../chat/ChatDrawer'
 import { useRoom } from '../../hooks/useRoom'
 import Toast from '../ui/Toast'
+import socket from '../../socket/socket'
+import { EVENTS } from '../../socket/events'
 
 // Lazy-load game components by game id
 const GAME_LOADERS = {
@@ -25,7 +27,10 @@ const GAME_LOADERS = {
 }
 
 export default function GameLayout() {
-  const { roomId, game, players } = useRoomStore()
+  const { game: routeGame, roomId: routeRoomId } = useParams()
+  const { roomId: storeRoomId, game: storeGame, players } = useRoomStore()
+  const setRoom = useRoomStore((s) => s.setRoom)
+  const clearRoom = useRoomStore((s) => s.clearRoom)
   const { name: myName } = usePlayerStore()
   const { isOpen: chatOpen, setOpen: setChatOpen, unreadCount } = useChatStore()
   const navigate = useNavigate()
@@ -33,6 +38,15 @@ export default function GameLayout() {
   const [toast, setToast] = useState(null)
   const [soundOn, setSoundOn] = useState(getSoundEnabled())
   const [copiedCode, setCopiedCode] = useState(false)
+
+  const roomId = storeRoomId || routeRoomId
+  const game = storeGame || routeGame || 'bingo'
+
+  useEffect(() => {
+    if (routeRoomId && (!storeRoomId || !storeGame)) {
+      setRoom({ roomId: routeRoomId, game: routeGame || 'bingo', status: 'playing' })
+    }
+  }, [routeRoomId, routeGame, storeRoomId, storeGame, setRoom])
 
   // Register room-level socket listeners
   useRoom({
@@ -50,6 +64,12 @@ export default function GameLayout() {
     setSoundOn(next)
   }
 
+  function handleGoHome() {
+    socket.emit(EVENTS.LEAVE_ROOM, {})
+    clearRoom()
+    navigate('/')
+  }
+
   function copyRoomCode() {
     navigator.clipboard?.writeText(roomId)
     setCopiedCode(true)
@@ -63,7 +83,7 @@ export default function GameLayout() {
         {/* Left: Back / Home + Game Label */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/')}
+            onClick={handleGoHome}
             className="flex items-center gap-1.5 p-1.5 rounded-xl hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all group"
             title="Leave to Home"
           >
@@ -96,14 +116,13 @@ export default function GameLayout() {
 
         {/* Center: Connected Players Pills */}
         <div className="hidden md:flex items-center gap-1.5">
-          {players.map((p) => (
+          {players.map((p, idx) => (
             <div
-              key={p.socket_id}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[11px] font-medium transition-all ${
-                p.is_connected
-                  ? 'bg-zinc-900/80 border-zinc-800 text-zinc-300'
-                  : 'bg-zinc-900/40 border-zinc-800/40 text-zinc-600 line-through'
-              }`}
+              key={p.socket_id || p.name || idx}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[11px] font-medium transition-all ${p.is_connected
+                ? 'bg-zinc-900/80 border-zinc-800 text-zinc-300'
+                : 'bg-zinc-900/40 border-zinc-800/40 text-zinc-600 line-through'
+                }`}
               title={p.is_connected ? `${p.name} (Connected)` : `${p.name} (Disconnected)`}
             >
               <span
@@ -126,11 +145,10 @@ export default function GameLayout() {
 
           <button
             onClick={() => setChatOpen(!chatOpen)}
-            className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
-              chatOpen
-                ? 'bg-blue-600/15 border-blue-500/30 text-blue-400'
-                : 'bg-zinc-900 hover:bg-zinc-850 border-zinc-800 text-zinc-300 hover:text-white'
-            }`}
+            className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${chatOpen
+              ? 'bg-blue-600/15 border-blue-500/30 text-blue-400'
+              : 'bg-zinc-900 hover:bg-zinc-850 border-zinc-800 text-zinc-300 hover:text-white'
+              }`}
             title="Toggle room chat"
           >
             <MessageSquare className="w-3.5 h-3.5" />

@@ -29,7 +29,14 @@ FRONTEND_ORIGINS = [
     "http://127.0.0.1:5175",
     "http://127.0.0.1:5176",
     "http://127.0.0.1:4173",
+    "https://multi-game-puce.vercel.app",
 ]
+
+# Allow additional custom frontend origin from environment variable
+extra_origin = os.environ.get("FRONTEND_URL")
+if extra_origin:
+    FRONTEND_ORIGINS.append(extra_origin.rstrip("/"))
+
 
 RECONNECT_TTL = 60          # seconds to hold disconnected player's slot
 MAX_CHAT_LOG  = 100         # max chat messages stored per room

@@ -53,8 +53,17 @@ export function useGameAudio(): GameAudioController {
         mutedRef.current = !soundEnabled
       }
     }
+    function handleCustomChange() {
+      const soundEnabled = getSoundEnabled()
+      setIsMutedState(!soundEnabled)
+      mutedRef.current = !soundEnabled
+    }
     window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
+    window.addEventListener('mgp_sound_change', handleCustomChange)
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('mgp_sound_change', handleCustomChange)
+    }
   }, [])
 
   const toggleMute = useCallback(() => {

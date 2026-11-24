@@ -18,11 +18,19 @@
  */
 
 export function formatRoomId(n) {
-  return String(n).padStart(3, '0').slice(0, 3)
+  const str = String(n || '').trim()
+  if (/^\d+$/.test(str) && str.length < 3) {
+    return str.padStart(3, '0')
+  }
+  return str
 }
 
 export function isValidRoomId(s) {
-  return /^\d{3}$/.test(String(s))
+  return /^[a-zA-Z0-9]{3,6}$/.test(String(s).trim())
+}
+
+export function generateSuggestedRoomId() {
+  return String(Math.floor(100 + Math.random() * 900))
 }
 
 export function getRoomDigits(roomId) {

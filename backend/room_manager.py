@@ -49,12 +49,22 @@ class RoomManager:
 
     # ── CRUD operations ───────────────────────────────────────────────────────
 
-    def create_room(self, game: str, host_socket_id: str, host_name: str) -> Tuple[Room, Player]:
+    def create_room(self, game: str, host_socket_id: str, host_name: str, custom_room_id: Optional[str] = None) -> Tuple[Room, Player]:
         """Create a new room and add the host as the first player."""
         if game not in MAX_PLAYERS:
             raise ValueError("INVALID_GAME")
 
-        room_id = self.generate_room_id()
+        if custom_room_id:
+            room_id = str(custom_room_id).strip()
+            if room_id.isdigit() and len(room_id) < 3:
+                room_id = room_id.zfill(3)
+            if not room_id.isalnum() or len(room_id) < 3 or len(room_id) > 6:
+                raise ValueError("INVALID_ROOM_ID")
+            if room_id in self.rooms:
+                raise ValueError("ROOM_ALREADY_EXISTS")
+        else:
+            room_id = self.generate_room_id()
+
         host = Player(
             socket_id=host_socket_id,
             name=host_name,

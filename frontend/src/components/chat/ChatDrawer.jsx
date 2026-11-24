@@ -25,26 +25,6 @@ export default function ChatDrawer() {
 
   return (
     <div className="absolute top-0 right-0 bottom-0 z-40 pointer-events-none flex justify-end">
-      {/* Floating Toggle Tab when closed */}
-      {!isOpen && (
-        <button
-          className="pointer-events-auto absolute right-4 top-4 z-40 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#171a21] hover:bg-[#202531] border border-white/[0.08] text-[#e2e8f0] shadow-lg transition-colors text-xs font-mono font-medium group active:scale-95"
-          onClick={() => setOpen(true)}
-          title="Open room chat"
-        >
-          <MessageSquare className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-          <span>Chat</span>
-          {unreadCount > 0 && (
-            <span
-              className="px-1.5 py-0.2 rounded-full bg-amber-500 text-[#111318] text-[10px] font-mono font-bold"
-              style={{ fontVariantNumeric: 'tabular-nums' }}
-            >
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
-      )}
-
       {/* Sleek Hardware Collapsible Drawer Panel (Overlay) */}
       <AnimatePresence>
         {isOpen && (

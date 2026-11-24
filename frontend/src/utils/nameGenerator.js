@@ -37,3 +37,5 @@ export function generateName() {
   const num    = Math.floor(Math.random() * 90) + 10   // 10–99
   return `${adj}${animal}${num}`
 }
+
+export const generatePlayerName = generateName

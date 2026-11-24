@@ -26,6 +26,7 @@ export const EVENTS = {
   START_GAME:     'start_game',
   GAME_ACTION:    'game_action',
   CHAT_MESSAGE:   'chat_message',
+  PLAY_AGAIN:     'play_again',
 
   // ── Server → Client (unicast — to one socket) ───────────────────────────────
   ROOM_CREATED:   'room_created',
@@ -43,4 +44,5 @@ export const EVENTS = {
   GAME_STATE_UPDATE:    'game_state_update',
   GAME_OVER:            'game_over',
   CHAT_BROADCAST:       'chat_broadcast',
+  ROOM_RESET:           'room_reset',
 }

@@ -68,7 +68,7 @@ export default function HomePage() {
       setMessages(data.chat_log || [])
       const me = data.players.find((p) => p.name === name)
       if (me) setColorIndex(me.color_index)
-      navigate(`/room/${data.room_id}`)
+      navigate(`/${data.game}/room/${data.room_id}`)
     }
 
     function onRoomError(data) {

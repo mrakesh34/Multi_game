@@ -32,7 +32,7 @@ fastapi_app = FastAPI(title="Multi-Game Platform API")
 fastapi_app.add_middleware(
     CORSMiddleware,
     allow_origins=FRONTEND_ORIGINS,
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_origin_regex=r"https://.*\.vercel\.app|https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,13 +46,17 @@ sio = socketio.AsyncServer(
     engineio_logger=False,
 )
 
-# Mount socket.io ASGI app — all /socket.io/* requests go here
-# Defining `app = socket_app` ensures `uvicorn main:app` and `uvicorn main:socket_app` both work!
+# Register every socket event handler (create_room, join_room, etc.)
+register_handlers(sio)
+
+# 1. Mount socket.io directly on fastapi_app so uvicorn main:fastapi_app works
+sio_app = socketio.ASGIApp(sio, socketio_path="")
+fastapi_app.mount("/socket.io", sio_app)
+
+# 2. Wrap as ASGIApp so uvicorn main:app and uvicorn main:socket_app also work
 app = socketio.ASGIApp(sio, other_asgi_app=fastapi_app)
 socket_app = app
 
-# Register every socket event handler (create_room, join_room, etc.)
-register_handlers(sio)
 
 
 # ── Health check ─────────────────────────────────────────────────────────────
