@@ -87,14 +87,23 @@ class UnoGame(BaseGame):
         }
         return self.get_state()   # Return sanitized (no hands leaked)
 
+    def update_player_socket(self, name: str, new_socket_id: str):
+        for ps in self._state.get("players", []):
+            if ps.get("name", "").strip().lower() == name.strip().lower():
+                ps["socket_id"] = new_socket_id
+
     def apply_action(self, socket_id: str, action_type: str, payload: dict) -> dict:
         # Find acting player
+        room_player = next((rp for rp in self.players if rp.socket_id == socket_id), None)
         player_idx = next(
-            (i for i, ps in enumerate(self._state["players"]) if ps["socket_id"] == socket_id),
+            (i for i, ps in enumerate(self._state["players"])
+             if ps["socket_id"] == socket_id or (room_player and ps["name"].strip().lower() == room_player.name.strip().lower())),
             None,
         )
         if player_idx is None:
             raise ValueError("Player not found")
+
+        self._state["players"][player_idx]["socket_id"] = socket_id
 
         current_idx = self._state["current_player_index"]
 

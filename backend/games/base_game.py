@@ -72,3 +72,7 @@ class BaseGame(ABC):
         UNO overrides this to hide other players' hands.
         """
         return self.get_state()
+
+    def update_player_socket(self, name: str, new_socket_id: str):
+        """Update socket_id mapping when a player reconnects."""
+        pass

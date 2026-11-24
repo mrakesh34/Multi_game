@@ -27,7 +27,7 @@ import './uno.css'
 
 export default function UnoGame() {
   const { gameState, status, players } = useRoomStore()
-  const { socketId } = usePlayerStore()
+  const { socketId, name: myName } = usePlayerStore()
   const playSound = useSound('uno')
 
   const [pendingWildCard, setPendingWildCard] = useState(null)
@@ -39,11 +39,17 @@ export default function UnoGame() {
 
   const currentIdx = gameState.current_player_index
   const currentPlayer = players[currentIdx]
-  const isMyTurn = currentPlayer?.socket_id === socketId
+  const isMyTurn =
+    currentPlayer?.socket_id === socketId ||
+    Boolean(
+      currentPlayer?.name &&
+      myName &&
+      currentPlayer.name.trim().toLowerCase() === myName.trim().toLowerCase()
+    )
 
   // Own player info
-  const myPlayerState = gameState.players?.find(p => p.socket_id === socketId)
-  const otherPlayers = gameState.players?.filter(p => p.socket_id !== socketId) || []
+  const myPlayerState = gameState.players?.find(p => p.socket_id === socketId || (myName && p.name?.trim().toLowerCase() === myName.trim().toLowerCase()))
+  const otherPlayers = gameState.players?.filter(p => p.socket_id !== socketId && (!myName || p.name?.trim().toLowerCase() !== myName.trim().toLowerCase())) || []
 
   function handlePlayCard(card) {
     if (!isMyTurn) return

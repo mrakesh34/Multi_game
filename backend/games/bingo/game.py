@@ -59,6 +59,11 @@ class BingoGame(BaseGame):
         }
         return self._state
 
+    def update_player_socket(self, name: str, new_socket_id: str):
+        for ps in self._state.get("players", []):
+            if ps.get("name", "").strip().lower() == name.strip().lower():
+                ps["socket_id"] = new_socket_id
+
     def apply_action(self, socket_id: str, action_type: str, payload: dict) -> dict:
         payload = payload or {}
 
@@ -66,9 +71,15 @@ class BingoGame(BaseGame):
         if action_type == "shuffle_card":
             if len(self._state["called_numbers"]) > 0:
                 raise ValueError("Cannot shuffle after the game has started")
-            ps = next((p for p in self._state["players"] if p["socket_id"] == socket_id), None)
+            room_player = next((rp for rp in self.players if rp.socket_id == socket_id), None)
+            ps = next(
+                (p for p in self._state["players"]
+                 if p["socket_id"] == socket_id or (room_player and p["name"].strip().lower() == room_player.name.strip().lower())),
+                None,
+            )
             if not ps:
                 raise ValueError("Player not found")
+            ps["socket_id"] = socket_id
             ps["card"] = logic.generate_card()
             self._state["last_action_summary"] = f"{ps['name']} shuffled their card"
             return self._state
@@ -80,8 +91,15 @@ class BingoGame(BaseGame):
         caller_idx = self._state["caller_turn_index"]
         caller_player = self._state["players"][caller_idx]
 
-        if caller_player["socket_id"] != socket_id:
+        room_player = next((rp for rp in self.players if rp.socket_id == socket_id), None)
+        is_caller = (caller_player["socket_id"] == socket_id) or (
+            room_player and caller_player["name"].strip().lower() == room_player.name.strip().lower()
+        )
+        if not is_caller:
             raise ValueError("Not your turn to pick a number")
+
+        # Keep socket_id synced in state
+        caller_player["socket_id"] = socket_id
 
         number = payload.get("number")
         if not isinstance(number, int) or number < 1 or number > TOTAL_NUMBERS:

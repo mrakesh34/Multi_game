@@ -42,7 +42,13 @@ export const BingoGame: React.FC = () => {
   // Caller turn calculation
   const callerIdx = gameState?.caller_turn_index ?? 0
   const callerPlayer = gameState?.players?.[callerIdx]
-  const isMyTurn = callerPlayer?.socket_id === socketId
+  const isMyTurn =
+    callerPlayer?.socket_id === socketId ||
+    Boolean(
+      callerPlayer?.name &&
+      myName &&
+      callerPlayer.name.trim().toLowerCase() === myName.trim().toLowerCase()
+    )
 
   // Local player state
   const myPlayerState = useMemo(() => {

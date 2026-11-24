@@ -24,7 +24,7 @@ import './ludo.css'
 
 export default function LudoGame() {
   const { gameState, status, players } = useRoomStore()
-  const { socketId } = usePlayerStore()
+  const { socketId, name: myName } = usePlayerStore()
   const playSound = useSound('ludo')
   const [rolling, setRolling] = useState(false)
 
@@ -34,8 +34,14 @@ export default function LudoGame() {
 
   const currentIdx = gameState.current_player_index
   const currentPlayer = players[currentIdx]
-  const isMyTurn = currentPlayer?.socket_id === socketId
-  const myPlayerInfo = gameState.players?.find((_, i) => players[i]?.socket_id === socketId)
+  const isMyTurn =
+    currentPlayer?.socket_id === socketId ||
+    Boolean(
+      currentPlayer?.name &&
+      myName &&
+      currentPlayer.name.trim().toLowerCase() === myName.trim().toLowerCase()
+    )
+  const myPlayerInfo = gameState.players?.find((p, i) => players[i]?.socket_id === socketId || (myName && players[i]?.name?.trim().toLowerCase() === myName.trim().toLowerCase()))
   const myColorIndex = myPlayerInfo?.color_index ?? 0
 
   const validMovePieces = isMyTurn && gameState.phase === 'move'

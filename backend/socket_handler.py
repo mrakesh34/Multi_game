@@ -133,7 +133,10 @@ def register_handlers(sio: socketio.AsyncServer):
             # Send current game state to reconnecting player
             if room.game_state is not None and room.room_id in _game_instances:
                 game_obj = _game_instances[room.room_id]
+                if hasattr(game_obj, "update_player_socket"):
+                    game_obj.update_player_socket(name, sid)
                 state = game_obj.get_state_for(sid)
+                room.game_state = game_obj.get_state()
             else:
                 state = room.game_state
 
