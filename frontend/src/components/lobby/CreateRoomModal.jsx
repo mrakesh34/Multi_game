@@ -46,10 +46,19 @@ export default function CreateRoomModal({ isOpen, onClose, game, playerName, onE
 
   function handleCreate() {
     if (!playerName) { setError('Set a name first'); return }
+    if (!socket.connected) {
+      socket.connect()
+    }
     setLoading(true)
     setError('')
 
+    const timeoutId = setTimeout(() => {
+      setLoading(false)
+      setError('Connection timeout. Please check your backend server.')
+    }, 6000)
+
     function onCreated(data) {
+      clearTimeout(timeoutId)
       socket.off(EVENTS.ROOM_ERROR, onRoomError)
       setRoom({ roomId: data.room_id, game: data.game, status: 'waiting' })
       setPlayers([data.player])
@@ -59,6 +68,7 @@ export default function CreateRoomModal({ isOpen, onClose, game, playerName, onE
     }
 
     function onRoomError(data) {
+      clearTimeout(timeoutId)
       socket.off(EVENTS.ROOM_CREATED, onCreated)
       setError(data.message)
       setLoading(false)

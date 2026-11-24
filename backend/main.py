@@ -32,6 +32,7 @@ fastapi_app = FastAPI(title="Multi-Game Platform API")
 fastapi_app.add_middleware(
     CORSMiddleware,
     allow_origins=FRONTEND_ORIGINS,
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -39,7 +40,7 @@ fastapi_app.add_middleware(
 
 # ── Socket.IO server ─────────────────────────────────────────────────────────
 sio = socketio.AsyncServer(
-    cors_allowed_origins=FRONTEND_ORIGINS,
+    cors_allowed_origins="*",
     async_mode="asgi",
     logger=False,
     engineio_logger=False,

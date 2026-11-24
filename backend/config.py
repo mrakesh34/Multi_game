@@ -16,7 +16,18 @@ CONSTANTS:
 """
 
 PORT = 8000
-FRONTEND_ORIGINS = ["http://localhost:5173", "http://localhost:4173"]
+FRONTEND_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "http://localhost:5176",
+    "http://localhost:4173",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "http://127.0.0.1:5175",
+    "http://127.0.0.1:5176",
+    "http://127.0.0.1:4173",
+]
 
 RECONNECT_TTL = 60          # seconds to hold disconnected player's slot
 MAX_CHAT_LOG  = 100         # max chat messages stored per room

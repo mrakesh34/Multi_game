@@ -31,9 +31,9 @@ export default {
         'accent-green': 'var(--accent-green)',
       },
       fontFamily: {
-        sans:  ['Inter', 'system-ui', 'sans-serif'],
+        sans:  ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
         game:  ['Nunito', 'sans-serif'],
-        mono:  ['JetBrains Mono', 'monospace'],
+        mono:  ['"JetBrains Mono"', 'monospace'],
       },
       animation: {
         'float': 'float 12s ease-in-out infinite alternate',
