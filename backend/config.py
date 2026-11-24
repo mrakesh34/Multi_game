@@ -15,7 +15,9 @@ CONSTANTS:
   - MAX_PLAYERS     : Per-game player-count limits used by room_manager
 """
 
-PORT = 8000
+import os
+
+PORT = int(os.environ.get("PORT", 8000))
 FRONTEND_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5174",
