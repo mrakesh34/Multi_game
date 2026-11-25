@@ -1,14 +1,14 @@
 /**
  * FILE: frontend/src/games/uno/constants.js
- * PURPOSE: Card colors, symbols, and labels for UNO.
+ * PURPOSE: Hardware-harmonized card colors, symbols, and labels for UNO.
  */
 
 export const CARD_COLORS = {
-  red:    '#ef4444',
-  green:  '#22c55e',
-  blue:   '#3b82f6',
-  yellow: '#eab308',
-  wild:   '#181824',
+  red:    '#d9482b',
+  green:  '#059669',
+  blue:   '#3b6e8c',
+  yellow: '#d97706',
+  wild:   '#171a21',
 }
 
 export const TYPE_SYMBOLS = {

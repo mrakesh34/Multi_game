@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none">
+  <defs>
+    <radialGradient id="chessBg" cx="50%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#222733"/>
+      <stop offset="100%" stop-color="#111318"/>
+    </radialGradient>
+    <linearGradient id="brassPiece" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff4d6"/>
+      <stop offset="55%" stop-color="#e5b869"/>
+      <stop offset="100%" stop-color="#9e6d24"/>
+    </linearGradient>
+    <linearGradient id="obsidianPiece" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3a4254"/>
+      <stop offset="55%" stop-color="#1f242f"/>
+      <stop offset="100%" stop-color="#0d1016"/>
+    </linearGradient>
+    <filter id="chessDrop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <rect width="320" height="200" fill="url(#chessBg)"/>
+
+  <!-- 4x4 Sculpted Walnut & Bone Chessboard Corner -->
+  <g transform="translate(58, 22)" filter="url(#chessDrop)">
+    <rect x="0" y="0" width="156" height="156" rx="14" fill="#191d25" stroke="#ffffff" stroke-opacity="0.1" stroke-width="1.5"/>
+    <g transform="translate(10, 10)">
+      <!-- Row 0 -->
+      <rect x="0" y="0" width="34" height="34" rx="2" fill="#e6dccb"/>
+      <rect x="34" y="0" width="34" height="34" rx="2" fill="#464d5c"/>
+      <rect x="68" y="0" width="34" height="34" rx="2" fill="#e6dccb"/>
+      <rect x="102" y="0" width="34" height="34" rx="2" fill="#464d5c"/>
+      <!-- Row 1 -->
+      <rect x="0" y="34" width="34" height="34" rx="2" fill="#464d5c"/>
+      <rect x="34" y="34" width="34" height="34" rx="2" fill="#e6dccb"/>
+      <rect x="68" y="34" width="34" height="34" rx="2" fill="#d97706" fill-opacity="0.78"/>
+      <rect x="102" y="34" width="34" height="34" rx="2" fill="#e6dccb"/>
+      <!-- Row 2 -->
+      <rect x="0" y="68" width="34" height="34" rx="2" fill="#e6dccb"/>
+      <rect x="34" y="68" width="34" height="34" rx="2" fill="#464d5c"/>
+      <rect x="68" y="68" width="34" height="34" rx="2" fill="#e6dccb"/>
+      <rect x="102" y="68" width="34" height="34" rx="2" fill="#464d5c"/>
+      <!-- Row 3 -->
+      <rect x="0" y="102" width="34" height="34" rx="2" fill="#464d5c"/>
+      <rect x="34" y="102" width="34" height="34" rx="2" fill="#e6dccb"/>
+      <rect x="68" y="102" width="34" height="34" rx="2" fill="#464d5c"/>
+      <rect x="102" y="102" width="34" height="34" rx="2" fill="#e6dccb"/>
+
+      <!-- Legal move target dot -->
+      <circle cx="85" cy="119" r="5.5" fill="#10b981"/>
+      <circle cx="51" cy="51" r="5.5" fill="#10b981"/>
+    </g>
+  </g>
+
+  <!-- Hero Sculpted King & Knight Foreground Silhouettes -->
+  <g filter="url(#chessDrop)">
+    <!-- Dark Obsidian King -->
+    <g transform="translate(206, 36)">
+      <path d="M22 4 V16 M16 10 H28" stroke="#e07a22" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M12 24 C10 19, 34 19, 32 24 L29 44 L36 86 C36 90, 8 90, 8 86 L15 44 Z" fill="url(#obsidianPiece)" stroke="#ffffff" stroke-opacity="0.18" stroke-width="1.2"/>
+      <rect x="10" y="88" width="24" height="7" rx="3" fill="#2b3240" stroke="#e07a22" stroke-opacity="0.5" stroke-width="1"/>
+      <rect x="6" y="96" width="32" height="8" rx="4" fill="#181c24" stroke="#ffffff" stroke-opacity="0.15"/>
+    </g>
+
+    <!-- Warm Brass/Bone Knight -->
+    <g transform="translate(232, 66)">
+      <path d="M16 74 L20 50 C14 48, 8 44, 10 35 C12 24, 24 14, 34 10 L36 18 C43 21, 47 30, 44 40 C40 43, 33 41, 29 42 C31 52, 36 62, 38 74 Z"
+            fill="url(#brassPiece)" stroke="#fffaf0" stroke-opacity="0.5" stroke-width="1.2"/>
+      <circle cx="34" cy="24" r="2" fill="#171a21"/>
+      <rect x="11" y="74" width="32" height="7" rx="3.5" fill="#d9a148"/>
+      <rect x="8" y="81" width="38" height="8" rx="4" fill="#8f611b"/>
+    </g>
+  </g>
+</svg>

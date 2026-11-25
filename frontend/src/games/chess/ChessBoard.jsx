@@ -1,16 +1,6 @@
 /**
  * FILE: frontend/src/games/chess/ChessBoard.jsx
- * PURPOSE: Renders the 8x8 standard chess board, piece placements, highlights for
- *          selected squares, legal move targets, last moves, and king check.
- *
- * PROPS:
- *   fen          : FEN string representing board state
- *   myColor      : 'white' | 'black' (determines board orientation)
- *   selectedSquare : string ('e2') | null
- *   legalMoves   : array of target square strings ['e3', 'e4']
- *   lastMove     : { from, to } | null
- *   isCheck      : boolean
- *   onSquareClick: function(square)
+ * PURPOSE: Renders the 8x8 Chess board inside a machined TE-01 hardware chassis.
  */
 
 import { useRef } from 'react'
@@ -32,77 +22,86 @@ export default function ChessBoard({
   const displayFiles = isFlipped ? [...FILES].reverse() : FILES
   const displayRanks = isFlipped ? [...RANKS].reverse() : RANKS
 
-  const boardMatrix = parseFenBoard(fen) // 8x8 row 0=rank 8, col 0=file a
+  const boardMatrix = parseFenBoard(fen)
 
   return (
-    <div
-      ref={boardRef}
-      className="chess-board-container mx-auto rounded-xl overflow-hidden shadow-2xl border border-white/10 grid grid-cols-8 grid-rows-8 relative select-none"
-    >
-      {displayRanks.map((rank, rIdx) =>
-        displayFiles.map((file, fIdx) => {
-          const square = `${file}${rank}`
-          const isLight = (FILES.indexOf(file) + parseInt(rank)) % 2 !== 0
-          const bgBase = isLight ? SQUARE_COLORS.light : SQUARE_COLORS.dark
+    <div className="relative chassis-card p-2.5 sm:p-3.5 rounded-2xl w-full max-w-[min(64dvh,520px)] mx-auto">
+      <div
+        ref={boardRef}
+        className="chess-board-container mx-auto rounded-xl overflow-hidden recessed-well grid grid-cols-8 grid-rows-8 relative select-none"
+      >
+        {displayRanks.map((rank, rIdx) =>
+          displayFiles.map((file, fIdx) => {
+            const square = `${file}${rank}`
+            const isLight = (FILES.indexOf(file) + parseInt(rank)) % 2 !== 0
+            const bgBase = isLight ? SQUARE_COLORS.light : SQUARE_COLORS.dark
 
-          const isSelected = selectedSquare === square
-          const isTarget = legalMoves.includes(square)
-          const isLastFrom = lastMove?.from === square
-          const isLastTo = lastMove?.to === square
+            const isSelected = selectedSquare === square
+            const isTarget = legalMoves.includes(square)
+            const isLastFrom = lastMove?.from === square
+            const isLastTo = lastMove?.to === square
 
-          // Determine square piece from boardMatrix
-          const rawRow = 8 - parseInt(rank)
-          const rawCol = FILES.indexOf(file)
-          const piece = boardMatrix?.[rawRow]?.[rawCol]
+            const rawRow = 8 - parseInt(rank)
+            const rawCol = FILES.indexOf(file)
+            const piece = boardMatrix?.[rawRow]?.[rawCol]
+            const isKingInCheck = isCheck && piece?.type === 'k'
 
-          return (
-            <div
-              key={square}
-              className="chess-square transition-colors cursor-pointer"
-              style={{
-                backgroundColor: isSelected
-                  ? SQUARE_COLORS.selected
-                  : isLastFrom || isLastTo
-                  ? SQUARE_COLORS.lastMove
-                  : bgBase,
-              }}
-              onClick={() => onSquareClick(square)}
-            >
-              {/* Rank & File corner label */}
-              {fIdx === 0 && (
-                <span className="absolute top-1 left-1 text-[10px] font-bold opacity-60 text-slate-700">
-                  {rank}
-                </span>
-              )}
-              {rIdx === 7 && (
-                <span className="absolute bottom-1 right-1 text-[10px] font-bold opacity-60 text-slate-700">
-                  {file}
-                </span>
-              )}
+            return (
+              <div
+                key={square}
+                className="chess-square transition-colors duration-150 cursor-pointer"
+                style={{
+                  backgroundColor: isSelected
+                    ? SQUARE_COLORS.selected
+                    : isKingInCheck
+                    ? SQUARE_COLORS.check
+                    : isLastFrom || isLastTo
+                    ? SQUARE_COLORS.lastMove
+                    : bgBase,
+                }}
+                onClick={() => onSquareClick(square)}
+              >
+                {fIdx === 0 && (
+                  <span
+                    className={`absolute top-0.5 left-1 text-[9px] font-mono font-bold ${
+                      isLight ? 'text-[#434a57]/75' : 'text-[#e6dccb]/75'
+                    }`}
+                  >
+                    {rank}
+                  </span>
+                )}
+                {rIdx === 7 && (
+                  <span
+                    className={`absolute bottom-0.5 right-1 text-[9px] font-mono font-bold ${
+                      isLight ? 'text-[#434a57]/75' : 'text-[#e6dccb]/75'
+                    }`}
+                  >
+                    {file}
+                  </span>
+                )}
 
-              {/* Target Move Indicator Dot / Ring */}
-              {isTarget && (
-                <div
-                  className={`absolute z-10 pointer-events-none rounded-full ${
-                    piece
-                      ? 'w-full h-full border-4 border-green-500/80 animate-pulse'
-                      : 'w-4 h-4 bg-green-500/80'
-                  }`}
-                />
-              )}
+                {isTarget && (
+                  <div
+                    className={`absolute z-10 pointer-events-none rounded-full ${
+                      piece
+                        ? 'w-[88%] h-[88%] border-[3px] border-[#10b981] animate-pulse'
+                        : 'w-3.5 h-3.5 bg-[#10b981]/85 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                    }`}
+                  />
+                )}
 
-              {/* Chess Piece */}
-              {piece && (
-                <ChessPiece
-                  piece={piece}
-                  isDraggable={false}
-                  onSelect={() => onSquareClick(square)}
-                />
-              )}
-            </div>
-          )
-        })
-      )}
+                {piece && (
+                  <ChessPiece
+                    piece={piece}
+                    isDraggable={false}
+                    onSelect={() => onSquareClick(square)}
+                  />
+                )}
+              </div>
+            )
+          })
+        )}
+      </div>
     </div>
   )
 }

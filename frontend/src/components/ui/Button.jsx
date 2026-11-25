@@ -1,39 +1,28 @@
 /**
  * FILE: frontend/src/components/ui/Button.jsx
- * PURPOSE: Reusable styled button component with multiple variants and states.
- *
- * PROPS:
- *   variant   : "primary" | "secondary" | "ghost"  (default: "primary")
- *               primary  → filled blue background
- *               secondary → transparent with colored border
- *               ghost    → no border, hover glow only
- *   size      : "sm" | "md" | "lg"  (default: "md")
- *   loading   : boolean — shows a spinner, disables click
- *   disabled  : boolean — greyed out, no interaction
- *   onClick   : function
- *   children  : React nodes (button label)
- *   className : additional Tailwind classes to merge
- *
- * USAGE:
- *   <Button variant="primary" onClick={handleStart}>Start Game</Button>
- *   <Button variant="secondary" size="sm" loading={joining}>Join</Button>
+ * PURPOSE: Tactile PBT keycap button component with mechanical press travel
+ *          and procedural Web Audio switch click.
  */
 
 import clsx from 'clsx'
 import Spinner from './Spinner'
+import { playKeyThock } from '../../utils/uiAudio'
 
-const BASE = 'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-40 disabled:cursor-not-allowed'
+const BASE =
+  'inline-flex items-center justify-center gap-2 font-semibold rounded-xl select-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 focus:ring-offset-[#111318] disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none'
 
 const VARIANTS = {
-  primary:   'bg-blue-600 hover:bg-blue-500 text-white focus:ring-blue-500 shadow-lg shadow-blue-900/40',
-  secondary: 'border border-blue-500 text-blue-400 hover:bg-blue-500/10 focus:ring-blue-500',
-  ghost:     'text-slate-300 hover:text-white hover:bg-white/5 focus:ring-white/20',
+  primary:   'keycap-primary',
+  secondary: 'keycap-btn',
+  emerald:   'bg-gradient-to-b from-[#059669] to-[#047857] border border-emerald-400/40 text-[#ecfdf5] shadow-[0_4px_0_#064e3b,0_8px_18px_rgba(5,150,105,0.24),inset_0_1px_0_rgba(255,255,255,0.24)] hover:-translate-y-[1px] active:translate-y-[3px] active:shadow-[0_1px_0_#064e3b] transition-all duration-150',
+  danger:    'bg-gradient-to-b from-[#d9482b] to-[#b5371e] border border-red-400/35 text-[#fff5f2] shadow-[0_4px_0_#6b1d0f,0_8px_18px_rgba(217,72,43,0.24),inset_0_1px_0_rgba(255,255,255,0.22)] hover:-translate-y-[1px] active:translate-y-[3px] active:shadow-[0_1px_0_#6b1d0f] transition-all duration-150',
+  ghost:     'text-zinc-300 hover:text-[#f2ece1] hover:bg-white/[0.05] border border-transparent hover:border-white/[0.07] transition-all duration-150 active:scale-[0.97]',
 }
 
 const SIZES = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-5 py-2.5 text-base',
-  lg: 'px-7 py-3.5 text-lg',
+  sm: 'px-3 py-1.5 text-xs',
+  md: 'px-4 py-2.5 text-sm',
+  lg: 'px-6 py-3 text-base',
 }
 
 export default function Button({
@@ -41,16 +30,24 @@ export default function Button({
   size = 'md',
   loading = false,
   disabled = false,
+  silent = false,
   onClick,
   children,
   className,
   ...rest
 }) {
+  function handleClick(e) {
+    if (!silent && !disabled && !loading) {
+      playKeyThock(variant === 'primary' ? 185 : 155)
+    }
+    onClick?.(e)
+  }
+
   return (
     <button
-      className={clsx(BASE, VARIANTS[variant], SIZES[size], className)}
+      className={clsx(BASE, VARIANTS[variant] || VARIANTS.primary, SIZES[size], className)}
       disabled={disabled || loading}
-      onClick={onClick}
+      onClick={handleClick}
       {...rest}
     >
       {loading && <Spinner size="sm" />}

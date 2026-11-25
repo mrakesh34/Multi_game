@@ -1,28 +1,26 @@
 /**
  * FILE: frontend/src/games/chess/constants.js
- * PURPOSE: Unicode piece symbols, square colors, and rank/file definitions.
+ * PURPOSE: Unicode piece symbols, TE-01 warm bone & slate square colors, and rank/file definitions.
  */
 
 export const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 export const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1']
 
 export const SQUARE_COLORS = {
-  light: '#f0d9b5',
-  dark:  '#b58863',
-  selected: '#fde047',
-  lastMove: 'rgba(254, 240, 138, 0.5)',
-  check: 'rgba(239, 68, 68, 0.6)',
+  light:    '#e6dccb',
+  dark:     '#57606f',
+  selected: '#e07a22',
+  lastMove: 'rgba(224, 122, 34, 0.34)',
+  check:    'rgba(217, 72, 43, 0.65)',
 }
 
 export const PIECE_UNICODE = {
-  // White pieces
   wP: '♙',
   wN: '♘',
   wB: '♗',
   wR: '♖',
   wQ: '♕',
   wK: '♔',
-  // Black pieces
   bP: '♟',
   bN: '♞',
   bB: '♝',

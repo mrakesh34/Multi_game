@@ -27,10 +27,10 @@ export const BOARD_SIZE = 15
 export const COLORS = ['red', 'green', 'yellow', 'blue']
 
 export const COLOR_HEX = {
-  red:    '#ef4444',
-  green:  '#22c55e',
-  yellow: '#eab308',
-  blue:   '#3b82f6',
+  red:    '#d9482b',
+  green:  '#059669',
+  yellow: '#d97706',
+  blue:   '#3b6e8c',
 }
 
 export const PLAYER_STARTS = [0, 13, 26, 39]

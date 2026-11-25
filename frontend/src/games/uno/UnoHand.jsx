@@ -1,13 +1,6 @@
 /**
  * FILE: frontend/src/games/uno/UnoHand.jsx
- * PURPOSE: Fan layout of player's hand cards with rotation angle calculation.
- *
- * PROPS:
- *   cards       : array of Card objects
- *   discardTop  : current discard pile top Card
- *   activeColor : currently declared color
- *   isMyTurn    : boolean
- *   onPlayCard  : function(card)
+ * PURPOSE: Fan layout of player's hand cards with smooth spring positioning.
  */
 
 import { sortHand, isPlayable } from './gameLogic'
@@ -22,12 +15,12 @@ export default function UnoHand({
 }) {
   const sorted = sortHand(cards)
   const count = sorted.length
-  const maxSpread = Math.min(count * 8, 50)
+  const maxSpread = Math.min(count * 6.5, 42)
   const stepAngle = count > 1 ? (maxSpread * 2) / (count - 1) : 0
 
   return (
-    <div className="relative flex justify-center items-end h-44 w-full select-none overflow-x-auto py-2">
-      <div className="flex items-center justify-center -space-x-8">
+    <div className="relative flex justify-center items-end h-44 w-full select-none overflow-x-auto py-3 px-4">
+      <div className="flex items-center justify-center -space-x-6 sm:-space-x-5">
         {sorted.map((card, i) => {
           const rotation = count > 1 ? -maxSpread + i * stepAngle : 0
           const canPlay = isMyTurn && isPlayable(card, discardTop, activeColor)
@@ -40,7 +33,7 @@ export default function UnoHand({
                 transformOrigin: 'bottom center',
                 zIndex: i,
               }}
-              className="transition-transform duration-200"
+              className="transition-transform duration-200 hover:z-40"
             >
               <UnoCard
                 card={card}

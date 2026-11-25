@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#222733"/>
+      <stop offset="100%" stop-color="#111318"/>
+    </radialGradient>
+    <linearGradient id="chassisGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#202531"/>
+      <stop offset="100%" stop-color="#14171f"/>
+    </linearGradient>
+    <linearGradient id="amberCap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e58127"/>
+      <stop offset="100%" stop-color="#b8590d"/>
+    </linearGradient>
+    <linearGradient id="darkCap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2c3342"/>
+      <stop offset="100%" stop-color="#212632"/>
+    </linearGradient>
+    <radialGradient id="ballCream" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#fffdf8"/>
+      <stop offset="65%" stop-color="#e8dfd0"/>
+      <stop offset="100%" stop-color="#b5aa98"/>
+    </radialGradient>
+    <radialGradient id="ballAmber" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="65%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#7c3a06"/>
+    </radialGradient>
+    <filter id="drop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000000" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+
+  <rect width="320" height="200" fill="url(#bgGlow)"/>
+  <!-- Subtle tabletop dots -->
+  <g fill="#ffffff" fill-opacity="0.045">
+    <circle cx="24" cy="24" r="1.2"/><circle cx="56" cy="24" r="1.2"/><circle cx="264" cy="24" r="1.2"/><circle cx="296" cy="24" r="1.2"/>
+    <circle cx="24" cy="176" r="1.2"/><circle cx="56" cy="176" r="1.2"/><circle cx="264" cy="176" r="1.2"/><circle cx="296" cy="176" r="1.2"/>
+  </g>
+
+  <!-- Main 5x5 Tactile Bingo Hardware Board -->
+  <g transform="translate(52, 20) rotate(-3 84 80)" filter="url(#drop)">
+    <rect x="0" y="0" width="166" height="162" rx="16" fill="url(#chassisGrad)" stroke="#ffffff" stroke-opacity="0.1" stroke-width="1.2"/>
+    <!-- Corner screws -->
+    <circle cx="9" cy="9" r="2.2" fill="#2a303d"/><circle cx="157" cy="9" r="2.2" fill="#2a303d"/>
+    <circle cx="9" cy="153" r="2.2" fill="#2a303d"/><circle cx="157" cy="153" r="2.2" fill="#2a303d"/>
+
+    <!-- B I N G O Header Lamps -->
+    <g transform="translate(14, 13)">
+      <rect x="0" y="0" width="24" height="16" rx="4" fill="url(#amberCap)"/>
+      <text x="12" y="11.5" text-anchor="middle" fill="#fffaf0" font-family="monospace" font-size="10" font-weight="800">B</text>
+      <rect x="28.5" y="0" width="24" height="16" rx="4" fill="url(#amberCap)"/>
+      <text x="40.5" y="11.5" text-anchor="middle" fill="#fffaf0" font-family="monospace" font-size="10" font-weight="800">I</text>
+      <rect x="57" y="0" width="24" height="16" rx="4" fill="url(#amberCap)"/>
+      <text x="69" y="11.5" text-anchor="middle" fill="#fffaf0" font-family="monospace" font-size="10" font-weight="800">N</text>
+      <rect x="85.5" y="0" width="24" height="16" rx="4" fill="#262c38"/>
+      <text x="97.5" y="11.5" text-anchor="middle" fill="#8a919e" font-family="monospace" font-size="10" font-weight="800">G</text>
+      <rect x="114" y="0" width="24" height="16" rx="4" fill="#262c38"/>
+      <text x="126" y="11.5" text-anchor="middle" fill="#8a919e" font-family="monospace" font-size="10" font-weight="800">O</text>
+    </g>
+
+    <!-- 5x5 Keycap Grid (Row 0 & Diagonal highlighted in Amber) -->
+    <g transform="translate(14, 35)" font-family="monospace" font-size="8.5" font-weight="800" text-anchor="middle">
+      <!-- Row 0 -->
+      <rect x="0" y="0" width="24" height="21" rx="4.5" fill="url(#amberCap)"/><text x="12" y="13.5" fill="#fffaf0">14</text>
+      <rect x="28.5" y="0" width="24" height="21" rx="4.5" fill="url(#amberCap)"/><text x="40.5" y="13.5" fill="#fffaf0">03</text>
+      <rect x="57" y="0" width="24" height="21" rx="4.5" fill="url(#amberCap)"/><text x="69" y="13.5" fill="#fffaf0">21</text>
+      <rect x="85.5" y="0" width="24" height="21" rx="4.5" fill="url(#amberCap)"/><text x="97.5" y="13.5" fill="#fffaf0">09</text>
+      <rect x="114" y="0" width="24" height="21" rx="4.5" fill="url(#amberCap)"/><text x="126" y="13.5" fill="#fffaf0">18</text>
+      <!-- Row 1 -->
+      <rect x="0" y="24.5" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="12" y="38" fill="#cbd5e1">07</text>
+      <rect x="28.5" y="24.5" width="24" height="21" rx="4.5" fill="url(#amberCap)"/><text x="40.5" y="38" fill="#fffaf0">25</text>
+      <rect x="57" y="24.5" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="69" y="38" fill="#cbd5e1">01</text>
+      <rect x="85.5" y="24.5" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="97.5" y="38" fill="#cbd5e1">16</text>
+      <rect x="114" y="24.5" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="126" y="38" fill="#cbd5e1">11</text>
+      <!-- Row 2 -->
+      <rect x="0" y="49" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="12" y="62.5" fill="#cbd5e1">20</text>
+      <rect x="28.5" y="49" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="40.5" y="62.5" fill="#cbd5e1">12</text>
+      <rect x="57" y="49" width="24" height="21" rx="4.5" fill="url(#amberCap)"/><text x="69" y="62.5" fill="#fffaf0">05</text>
+      <rect x="85.5" y="49" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="97.5" y="62.5" fill="#cbd5e1">23</text>
+      <rect x="114" y="49" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="126" y="62.5" fill="#cbd5e1">08</text>
+      <!-- Row 3 -->
+      <rect x="0" y="73.5" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="12" y="87" fill="#cbd5e1">02</text>
+      <rect x="28.5" y="73.5" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="40.5" y="87" fill="#cbd5e1">19</text>
+      <rect x="57" y="73.5" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="69" y="87" fill="#cbd5e1">15</text>
+      <rect x="85.5" y="73.5" width="24" height="21" rx="4.5" fill="url(#amberCap)"/><text x="97.5" y="87" fill="#fffaf0">06</text>
+      <rect x="114" y="73.5" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="126" y="87" fill="#cbd5e1">24</text>
+      <!-- Row 4 -->
+      <rect x="0" y="98" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="12" y="111.5" fill="#cbd5e1">17</text>
+      <rect x="28.5" y="98" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="40.5" y="111.5" fill="#cbd5e1">10</text>
+      <rect x="57" y="98" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="69" y="111.5" fill="#cbd5e1">04</text>
+      <rect x="85.5" y="98" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="97.5" y="111.5" fill="#cbd5e1">22</text>
+      <rect x="114" y="98" width="24" height="21" rx="4.5" fill="url(#darkCap)"/><text x="126" y="111.5" fill="#cbd5e1">13</text>
+    </g>
+  </g>
+
+  <!-- Ceramic Bingo Balls beside the board -->
+  <g filter="url(#drop)">
+    <circle cx="246" cy="72" r="24" fill="url(#ballCream)"/>
+    <circle cx="246" cy="72" r="14" fill="none" stroke="#d97706" stroke-width="2"/>
+    <text x="246" y="77" text-anchor="middle" fill="#171a21" font-family="monospace" font-size="14" font-weight="900">25</text>
+
+    <circle cx="232" cy="134" r="28" fill="url(#ballAmber)"/>
+    <circle cx="232" cy="134" r="16" fill="#fffaf0"/>
+    <text x="232" y="140" text-anchor="middle" fill="#171a21" font-family="monospace" font-size="16" font-weight="900">14</text>
+  </g>
+</svg>

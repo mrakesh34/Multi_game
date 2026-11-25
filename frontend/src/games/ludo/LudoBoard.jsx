@@ -1,121 +1,117 @@
 /**
  * FILE: frontend/src/games/ludo/LudoBoard.jsx
- * PURPOSE: SVG-based standard 15x15 Ludo board renderer.
- *          Renders yards, tracks, safe stars, home columns, and center triangles.
- *
- * PROPS:
- *   children: pieces or overlays rendered on top of the board
+ * PURPOSE: SVG-based 15x15 Ludo board rendered inside a TE-01 hardware chassis
+ *          using warm anodized tabletop pigments (no neon blue/slate slop).
  */
 
 import { SAFE_SQUARES, BOARD_PATH } from './constants'
 
 export default function LudoBoard({ children }) {
   return (
-    <div className="relative ludo-board-container mx-auto bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-      <svg
-        viewBox="0 0 15 15"
-        className="w-full h-full select-none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {/* Background */}
-        <rect x="0" y="0" width="15" height="15" fill="#0f172a" />
+    <div className="relative chassis-card p-2.5 sm:p-3.5 rounded-2xl mx-auto">
+      <div className="relative ludo-board-container mx-auto bg-[#0c0e13] rounded-xl overflow-hidden recessed-well">
+        <svg
+          viewBox="0 0 15 15"
+          className="w-full h-full select-none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Recessed Track Surface */}
+          <rect x="0" y="0" width="15" height="15" fill="#0d0f14" />
 
-        {/* --- Yards (6x6 corners) --- */}
-        {/* Red Yard (Top-Left) */}
-        <rect x="0" y="0" width="6" height="6" fill="#ef4444" />
-        <rect x="1" y="1" width="4" height="4" fill="#ffffff" rx="0.5" />
-        <circle cx="2" cy="2" r="0.6" fill="#ef4444" />
-        <circle cx="4" cy="2" r="0.6" fill="#ef4444" />
-        <circle cx="2" cy="4" r="0.6" fill="#ef4444" />
-        <circle cx="4" cy="4" r="0.6" fill="#ef4444" />
+          {/* --- Yards (6x6 corners) --- */}
+          {/* Red Yard (Top-Left) */}
+          <rect x="0" y="0" width="6" height="6" fill="#d9482b" />
+          <rect x="0.9" y="0.9" width="4.2" height="4.2" fill="#f5efe6" rx="0.55" />
+          <circle cx="2" cy="2" r="0.58" fill="#d9482b" />
+          <circle cx="4" cy="2" r="0.58" fill="#d9482b" />
+          <circle cx="2" cy="4" r="0.58" fill="#d9482b" />
+          <circle cx="4" cy="4" r="0.58" fill="#d9482b" />
 
-        {/* Green Yard (Top-Right) */}
-        <rect x="9" y="0" width="6" height="6" fill="#22c55e" />
-        <rect x="10" y="1" width="4" height="4" fill="#ffffff" rx="0.5" />
-        <circle cx="11" cy="2" r="0.6" fill="#22c55e" />
-        <circle cx="13" cy="2" r="0.6" fill="#22c55e" />
-        <circle cx="11" cy="4" r="0.6" fill="#22c55e" />
-        <circle cx="13" cy="4" r="0.6" fill="#22c55e" />
+          {/* Green Yard (Top-Right) */}
+          <rect x="9" y="0" width="6" height="6" fill="#059669" />
+          <rect x="9.9" y="0.9" width="4.2" height="4.2" fill="#f5efe6" rx="0.55" />
+          <circle cx="11" cy="2" r="0.58" fill="#059669" />
+          <circle cx="13" cy="2" r="0.58" fill="#059669" />
+          <circle cx="11" cy="4" r="0.58" fill="#059669" />
+          <circle cx="13" cy="4" r="0.58" fill="#059669" />
 
-        {/* Yellow Yard (Bottom-Right) */}
-        <rect x="9" y="9" width="6" height="6" fill="#eab308" />
-        <rect x="10" y="10" width="4" height="4" fill="#ffffff" rx="0.5" />
-        <circle cx="11" cy="11" r="0.6" fill="#eab308" />
-        <circle cx="13" cy="11" r="0.6" fill="#eab308" />
-        <circle cx="11" cy="13" r="0.6" fill="#eab308" />
-        <circle cx="13" cy="13" r="0.6" fill="#eab308" />
+          {/* Yellow/Amber Yard (Bottom-Right) */}
+          <rect x="9" y="9" width="6" height="6" fill="#d97706" />
+          <rect x="9.9" y="9.9" width="4.2" height="4.2" fill="#f5efe6" rx="0.55" />
+          <circle cx="11" cy="11" r="0.58" fill="#d97706" />
+          <circle cx="13" cy="11" r="0.58" fill="#d97706" />
+          <circle cx="11" cy="13" r="0.58" fill="#d97706" />
+          <circle cx="13" cy="13" r="0.58" fill="#d97706" />
 
-        {/* Blue Yard (Bottom-Left) */}
-        <rect x="0" y="9" width="6" height="6" fill="#3b82f6" />
-        <rect x="1" y="10" width="4" height="4" fill="#ffffff" rx="0.5" />
-        <circle cx="2" cy="11" r="0.6" fill="#3b82f6" />
-        <circle cx="4" cy="11" r="0.6" fill="#3b82f6" />
-        <circle cx="2" cy="13" r="0.6" fill="#3b82f6" />
-        <circle cx="4" cy="13" r="0.6" fill="#3b82f6" />
+          {/* Slate-Cobalt Yard (Bottom-Left) */}
+          <rect x="0" y="9" width="6" height="6" fill="#3b6e8c" />
+          <rect x="0.9" y="9.9" width="4.2" height="4.2" fill="#f5efe6" rx="0.55" />
+          <circle cx="2" cy="11" r="0.58" fill="#3b6e8c" />
+          <circle cx="4" cy="11" r="0.58" fill="#3b6e8c" />
+          <circle cx="2" cy="13" r="0.58" fill="#3b6e8c" />
+          <circle cx="4" cy="13" r="0.58" fill="#3b6e8c" />
 
-        {/* --- Outer Track Grid Cells --- */}
-        {BOARD_PATH.map((cell, idx) => {
-          const isSafe = SAFE_SQUARES.includes(idx)
-          let cellFill = '#1e293b'
-          if (idx === 0) cellFill = '#ef4444' // Red start
-          else if (idx === 13) cellFill = '#22c55e' // Green start
-          else if (idx === 26) cellFill = '#eab308' // Yellow start
-          else if (idx === 39) cellFill = '#3b82f6' // Blue start
+          {/* --- Outer Track Grid Cells --- */}
+          {BOARD_PATH.map((cell, idx) => {
+            const isSafe = SAFE_SQUARES.includes(idx)
+            let cellFill = '#171a21'
+            if (idx === 0) cellFill = '#d9482b'
+            else if (idx === 13) cellFill = '#059669'
+            else if (idx === 26) cellFill = '#d97706'
+            else if (idx === 39) cellFill = '#3b6e8c'
 
-          return (
-            <g key={`track-${idx}`}>
-              <rect
-                x={cell.col}
-                y={cell.row}
-                width="1"
-                height="1"
-                fill={cellFill}
-                stroke="#334155"
-                strokeWidth="0.04"
-              />
-              {isSafe && idx !== 0 && idx !== 13 && idx !== 26 && idx !== 39 && (
-                <text
-                  x={cell.col + 0.5}
-                  y={cell.row + 0.7}
-                  fontSize="0.5"
-                  textAnchor="middle"
-                  fill="#f59e0b"
-                >
-                  ⭐
-                </text>
-              )}
-            </g>
-          )
-        })}
+            return (
+              <g key={`track-${idx}`}>
+                <rect
+                  x={cell.col}
+                  y={cell.row}
+                  width="1"
+                  height="1"
+                  fill={cellFill}
+                  stroke="#2a303d"
+                  strokeWidth="0.045"
+                />
+                {isSafe && idx !== 0 && idx !== 13 && idx !== 26 && idx !== 39 && (
+                  <text
+                    x={cell.col + 0.5}
+                    y={cell.row + 0.68}
+                    fontSize="0.55"
+                    textAnchor="middle"
+                    fill="#e07a22"
+                    fontWeight="bold"
+                  >
+                    ★
+                  </text>
+                )}
+              </g>
+            )
+          })}
 
-        {/* --- Home Columns (5 per color) --- */}
-        {/* Red Home column */}
-        {[1, 2, 3, 4, 5].map(c => (
-          <rect key={`rh-${c}`} x={c} y="7" width="1" height="1" fill="#ef4444" stroke="#334155" strokeWidth="0.04" />
-        ))}
-        {/* Green Home column */}
-        {[1, 2, 3, 4, 5].map(r => (
-          <rect key={`gh-${r}`} x="7" y={r} width="1" height="1" fill="#22c55e" stroke="#334155" strokeWidth="0.04" />
-        ))}
-        {/* Yellow Home column */}
-        {[9, 10, 11, 12, 13].map(c => (
-          <rect key={`yh-${c}`} x={c} y="7" width="1" height="1" fill="#eab308" stroke="#334155" strokeWidth="0.04" />
-        ))}
-        {/* Blue Home column */}
-        {[9, 10, 11, 12, 13].map(r => (
-          <rect key={`bh-${r}`} x="7" y={r} width="1" height="1" fill="#3b82f6" stroke="#334155" strokeWidth="0.04" />
-        ))}
+          {/* --- Home Columns (5 per color) --- */}
+          {[1, 2, 3, 4, 5].map(c => (
+            <rect key={`rh-${c}`} x={c} y="7" width="1" height="1" fill="#d9482b" stroke="#2a303d" strokeWidth="0.045" />
+          ))}
+          {[1, 2, 3, 4, 5].map(r => (
+            <rect key={`gh-${r}`} x="7" y={r} width="1" height="1" fill="#059669" stroke="#2a303d" strokeWidth="0.045" />
+          ))}
+          {[9, 10, 11, 12, 13].map(c => (
+            <rect key={`yh-${c}`} x={c} y="7" width="1" height="1" fill="#d97706" stroke="#2a303d" strokeWidth="0.045" />
+          ))}
+          {[9, 10, 11, 12, 13].map(r => (
+            <rect key={`bh-${r}`} x="7" y={r} width="1" height="1" fill="#3b6e8c" stroke="#2a303d" strokeWidth="0.045" />
+          ))}
 
-        {/* --- Center Finish Triangles (Center 6,6 to 8,8) --- */}
-        <polygon points="6,6 9,6 7.5,7.5" fill="#22c55e" />
-        <polygon points="9,6 9,9 7.5,7.5" fill="#eab308" />
-        <polygon points="9,9 6,9 7.5,7.5" fill="#3b82f6" />
-        <polygon points="6,9 6,6 7.5,7.5" fill="#ef4444" />
-      </svg>
+          {/* --- Center Finish Triangles --- */}
+          <polygon points="6,6 9,6 7.5,7.5" fill="#059669" stroke="#0d0f14" strokeWidth="0.04" />
+          <polygon points="9,6 9,9 7.5,7.5" fill="#d97706" stroke="#0d0f14" strokeWidth="0.04" />
+          <polygon points="9,9 6,9 7.5,7.5" fill="#3b6e8c" stroke="#0d0f14" strokeWidth="0.04" />
+          <polygon points="6,9 6,6 7.5,7.5" fill="#d9482b" stroke="#0d0f14" strokeWidth="0.04" />
+        </svg>
 
-      {/* Layer for animated pieces */}
-      <div className="absolute inset-0 pointer-events-auto">
-        {children}
+        {/* Layer for animated pieces */}
+        <div className="absolute inset-0 pointer-events-auto">
+          {children}
+        </div>
       </div>
     </div>
   )

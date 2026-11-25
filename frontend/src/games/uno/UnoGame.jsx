@@ -1,13 +1,6 @@
 /**
  * FILE: frontend/src/games/uno/UnoGame.jsx
- * PURPOSE: Root game component for UNO.
- *          Handles hand fan, discard & draw piles, color selection modal,
- *          UNO button call, and sound effects.
- *
- * SOCKET ACTIONS:
- *   - "play_card" -> { card_id, chosen_color? }
- *   - "draw_card" -> {}
- *   - "call_uno"  -> {}
+ * PURPOSE: Root game component for UNO styled with TE-01 Tactile Console surface.
  */
 
 import { useState } from 'react'
@@ -15,6 +8,7 @@ import { useRoomStore, usePlayerStore } from '../../store'
 import socket from '../../socket/socket'
 import { EVENTS } from '../../socket/events'
 import { useSound } from '../../hooks/useSound'
+import { playSnap } from '../../utils/uiAudio'
 import UnoHand from './UnoHand'
 import UnoDiscardPile from './UnoDiscardPile'
 import DrawPile from './DrawPile'
@@ -34,7 +28,11 @@ export default function UnoGame() {
   const [showColorPicker, setShowColorPicker] = useState(false)
 
   if (!gameState) {
-    return <div className="p-8 text-center text-slate-400">Loading UNO game...</div>
+    return (
+      <div className="flex items-center justify-center h-full tabletop-surface font-mono text-xs text-[#8a919e]">
+        Loading UNO table...
+      </div>
+    )
   }
 
   const currentIdx = gameState.current_player_index
@@ -47,9 +45,17 @@ export default function UnoGame() {
       currentPlayer.name.trim().toLowerCase() === myName.trim().toLowerCase()
     )
 
-  // Own player info
-  const myPlayerState = gameState.players?.find(p => p.socket_id === socketId || (myName && p.name?.trim().toLowerCase() === myName.trim().toLowerCase()))
-  const otherPlayers = gameState.players?.filter(p => p.socket_id !== socketId && (!myName || p.name?.trim().toLowerCase() !== myName.trim().toLowerCase())) || []
+  const myPlayerState = gameState.players?.find(
+    p =>
+      p.socket_id === socketId ||
+      (myName && p.name?.trim().toLowerCase() === myName.trim().toLowerCase())
+  )
+  const otherPlayers =
+    gameState.players?.filter(
+      p =>
+        p.socket_id !== socketId &&
+        (!myName || p.name?.trim().toLowerCase() !== myName.trim().toLowerCase())
+    ) || []
 
   function handlePlayCard(card) {
     if (!isMyTurn) return
@@ -60,6 +66,7 @@ export default function UnoGame() {
       return
     }
 
+    playSnap()
     playSound('card_play')
     socket.emit(EVENTS.GAME_ACTION, {
       action_type: 'play_card',
@@ -69,6 +76,7 @@ export default function UnoGame() {
 
   function handleColorSelect(chosen_color) {
     if (!pendingWildCard) return
+    playSnap()
     playSound('card_play')
     socket.emit(EVENTS.GAME_ACTION, {
       action_type: 'play_card',
@@ -80,6 +88,7 @@ export default function UnoGame() {
 
   function handleDraw() {
     if (!isMyTurn) return
+    playSnap()
     playSound('card_draw')
     socket.emit(EVENTS.GAME_ACTION, { action_type: 'draw_card', payload: {} })
   }
@@ -90,45 +99,50 @@ export default function UnoGame() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-between p-4 h-full max-w-5xl mx-auto gap-4">
-      {/* Top Banner & Other Players */}
-      <TurnBanner isMyTurn={isMyTurn} playerName={currentPlayer?.name} />
-      <UnoPlayerStatus players={otherPlayers} currentIdx={currentIdx} />
+    <div className="relative flex flex-col items-center justify-between w-full h-full px-3 sm:px-6 py-3 tabletop-surface overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none tabletop-dots opacity-45" />
+      <div className="absolute inset-0 pointer-events-none tabletop-grain" />
 
-      {/* Center Table: Discard + Draw Piles */}
-      <div className="flex items-center justify-center gap-10 my-auto">
-        <DrawPile
-          count={gameState.draw_pile_count}
-          canDraw={isMyTurn}
-          onDraw={handleDraw}
-        />
-        <UnoDiscardPile
-          topCard={gameState.discard_top}
-          activeColor={gameState.active_color}
-        />
+      <div className="relative z-10 flex flex-col items-center justify-between h-full w-full max-w-5xl mx-auto gap-3">
+        <div className="w-full flex flex-col items-center gap-2">
+          <TurnBanner isMyTurn={isMyTurn} playerName={currentPlayer?.name} />
+          <UnoPlayerStatus players={otherPlayers} currentIdx={currentIdx} />
+        </div>
 
-        {/* Call UNO button (visible when own hand has <= 2 cards) */}
-        {myPlayerState?.hand?.length <= 2 && (
-          <Button
-            variant="primary"
-            size="lg"
-            className="bg-red-600 hover:bg-red-500 font-game font-black text-xl animate-pulse shadow-2xl"
-            onClick={handleCallUno}
-          >
-            🔥 UNO!
-          </Button>
-        )}
-      </div>
+        {/* Center Table: Draw & Discard Deck */}
+        <div className="chassis-card px-8 py-6 rounded-3xl flex items-center justify-center gap-8 sm:gap-12 my-auto">
+          <DrawPile
+            count={gameState.draw_pile_count}
+            canDraw={isMyTurn}
+            onDraw={handleDraw}
+          />
+          <UnoDiscardPile
+            topCard={gameState.discard_top}
+            activeColor={gameState.active_color}
+          />
 
-      {/* Own Hand */}
-      <div className="w-full">
-        <UnoHand
-          cards={myPlayerState?.hand || []}
-          discardTop={gameState.discard_top}
-          activeColor={gameState.active_color}
-          isMyTurn={isMyTurn}
-          onPlayCard={handlePlayCard}
-        />
+          {myPlayerState?.hand?.length <= 2 && (
+            <Button
+              variant="danger"
+              size="lg"
+              className="font-mono font-black text-base uppercase tracking-wider animate-pulse"
+              onClick={handleCallUno}
+            >
+              UNO!
+            </Button>
+          )}
+        </div>
+
+        {/* Player's Fanned Hand */}
+        <div className="w-full">
+          <UnoHand
+            cards={myPlayerState?.hand || []}
+            discardTop={gameState.discard_top}
+            activeColor={gameState.active_color}
+            isMyTurn={isMyTurn}
+            onPlayCard={handlePlayCard}
+          />
+        </div>
       </div>
 
       <ColorPicker
@@ -136,7 +150,9 @@ export default function UnoGame() {
         onSelectColor={handleColorSelect}
       />
 
-      {status === 'finished' && <WinScreen winnerName={gameState.players?.find(p => p.hand_count === 0)?.name} />}
+      {status === 'finished' && (
+        <WinScreen winnerName={gameState.players?.find(p => p.hand_count === 0)?.name} />
+      )}
     </div>
   )
 }

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none">
+  <defs>
+    <radialGradient id="unoBg" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#222733"/>
+      <stop offset="100%" stop-color="#111318"/>
+    </radialGradient>
+    <filter id="cardShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#000000" flood-opacity="0.58"/>
+    </filter>
+  </defs>
+
+  <rect width="320" height="200" fill="url(#unoBg)"/>
+
+  <!-- Left Card: Emerald Reverse -->
+  <g transform="translate(70, 38) rotate(-14 38 56)" filter="url(#cardShadow)">
+    <rect x="0" y="0" width="78" height="114" rx="12" fill="#059669" stroke="#f5efe6" stroke-width="3.5"/>
+    <ellipse cx="39" cy="57" rx="25" ry="42" transform="rotate(24 39 57)" fill="#f5efe6"/>
+    <text x="39" y="65" text-anchor="middle" fill="#059669" font-family="sans-serif" font-size="30" font-weight="900">↺</text>
+    <text x="10" y="18" fill="#f5efe6" font-family="monospace" font-size="11" font-weight="800">↺</text>
+    <text x="68" y="104" text-anchor="end" fill="#f5efe6" font-family="monospace" font-size="11" font-weight="800">↺</text>
+  </g>
+
+  <!-- Center Card: Crimson +2 / 7 -->
+  <g transform="translate(120, 26) rotate(-2 39 57)" filter="url(#cardShadow)">
+    <rect x="0" y="0" width="80" height="118" rx="12" fill="#d9482b" stroke="#f5efe6" stroke-width="3.5"/>
+    <ellipse cx="40" cy="59" rx="26" ry="44" transform="rotate(24 40 59)" fill="#f5efe6"/>
+    <text x="40" y="70" text-anchor="middle" fill="#d9482b" font-family="sans-serif" font-size="34" font-weight="900">7</text>
+    <text x="10" y="19" fill="#f5efe6" font-family="monospace" font-size="12" font-weight="900">7</text>
+    <text x="70" y="108" text-anchor="end" fill="#f5efe6" font-family="monospace" font-size="12" font-weight="900">7</text>
+  </g>
+
+  <!-- Right Front Card: Amber Wild +4 Style -->
+  <g transform="translate(168, 42) rotate(13 39 57)" filter="url(#cardShadow)">
+    <rect x="0" y="0" width="80" height="118" rx="12" fill="#181c24" stroke="#f5efe6" stroke-width="3.5"/>
+    <ellipse cx="40" cy="59" rx="26" ry="44" transform="rotate(24 40 59)" fill="#f5efe6"/>
+    <!-- Four hardware pigment quadrants inside oval -->
+    <g transform="translate(40, 59)">
+      <path d="M0 0 L0 -18 A18 18 0 0 1 18 0 Z" fill="#d9482b"/>
+      <path d="M0 0 L18 0 A18 18 0 0 1 0 18 Z" fill="#e07a22"/>
+      <path d="M0 0 L0 18 A18 18 0 0 1 -18 0 Z" fill="#059669"/>
+      <path d="M0 0 L-18 0 A18 18 0 0 1 0 -18 Z" fill="#3b6e8c"/>
+      <circle cx="0" cy="0" r="6" fill="#f5efe6"/>
+    </g>
+    <text x="10" y="19" fill="#e07a22" font-family="monospace" font-size="11" font-weight="900">+4</text>
+    <text x="70" y="108" text-anchor="end" fill="#e07a22" font-family="monospace" font-size="11" font-weight="900">+4</text>
+  </g>
+</svg>

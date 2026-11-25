@@ -1,26 +1,26 @@
 /*
  * FILE: frontend/src/games/uno/uno.css
- * PURPOSE: Card dimensions, quadrant background, and hand fan styling for UNO.
+ * PURPOSE: Matte cardstock card dimensions, wild quadrant styling, and fan layout for UNO.
  */
 
 .uno-card {
-  width: 90px;
-  height: 135px;
-  border-radius: 12px;
+  width: 88px;
+  height: 132px;
+  border-radius: 14px;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .uno-card-center-oval {
-  width: 72px;
-  height: 110px;
-  background: #ffffff;
+  width: 68px;
+  height: 104px;
+  background: #f5efe6;
   border-radius: 50%;
-  transform: rotate(25deg);
+  transform: rotate(24deg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,9 +28,9 @@
 
 .uno-wild-quadrants {
   background: conic-gradient(
-    #ef4444 0% 25%,
-    #3b82f6 25% 50%,
-    #eab308 50% 75%,
-    #22c55e 75% 100%
+    #d9482b 0% 25%,
+    #3b6e8c 25% 50%,
+    #d97706 50% 75%,
+    #059669 75% 100%
   );
 }

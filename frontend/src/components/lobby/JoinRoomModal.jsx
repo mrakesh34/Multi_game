@@ -1,58 +1,35 @@
 /**
  * FILE: frontend/src/components/lobby/JoinRoomModal.jsx
- * PURPOSE: Modal for joining an existing room by its 3-digit code.
- *
- * PROPS:
- *   isOpen     : boolean
- *   onClose    : function
- *   game       : game config object { id, name, emoji }
- *   playerName : current local player's name
- *   onError    : callback(message) for errors
- *
- * INPUT VALIDATION:
- *   - Room code must be exactly 3 numeric digits (enforced by isValidRoomId)
- *   - Digits only: input filtered to [0-9]
- *   - Each digit typed into a separate single-character input field for UX
- *     (auto-focus next field on each keypress, backspace goes back)
- *
- * SOCKET EVENTS:
- *   EMIT: join_room → { room_id: "742", player_name }
- *   LISTEN (once):
- *     room_joined  → store room state, navigate to /room/:id
- *     room_error   → show inline error, stop loading
- *
- * ERROR CODES TO HANDLE:
- *   ROOM_NOT_FOUND → "Room does not exist"
- *   ROOM_FULL      → "Room is full"
- *   ROOM_STARTED   → "Game already in progress"
- *   NAME_TAKEN     → "Name already taken in this room"
+ * PURPOSE: Tactile modal for joining an existing room by its 3-digit code.
  */
 
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Modal  from '../ui/Modal'
+import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 import socket from '../../socket/socket'
 import { EVENTS } from '../../socket/events'
 import { isValidRoomId } from '../../utils/roomCode'
+import { playKeyThock } from '../../utils/uiAudio'
 import { useRoomStore, usePlayerStore, useChatStore } from '../../store'
 
 export default function JoinRoomModal({ isOpen, onClose, game, playerName, onError }) {
-  const [digits,  setDigits]  = useState(['', '', ''])
+  const [digits, setDigits] = useState(['', '', ''])
   const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState('')
+  const [error, setError] = useState('')
   const inputRefs = [useRef(), useRef(), useRef()]
-  const navigate  = useNavigate()
-  const setRoom   = useRoomStore(s => s.setRoom)
-  const setPlayers= useRoomStore(s => s.setPlayers)
+  const navigate = useNavigate()
+  const setRoom = useRoomStore(s => s.setRoom)
+  const setPlayers = useRoomStore(s => s.setPlayers)
   const setColorIndex = usePlayerStore(s => s.setColorIndex)
-  const setMessages   = useChatStore(s => s.setMessages)
+  const setMessages = useChatStore(s => s.setMessages)
 
   function handleDigit(index, value) {
     const d = value.replace(/\D/g, '').slice(-1)
     const next = [...digits]
     next[index] = d
     setDigits(next)
+    if (d) playKeyThock(210 + index * 20)
     if (d && index < 2) inputRefs[index + 1].current?.focus()
   }
 
@@ -62,10 +39,13 @@ export default function JoinRoomModal({ isOpen, onClose, game, playerName, onErr
     }
   }
 
-  function handleJoin() {
+  function handleJoin(e) {
+    e?.preventDefault()
     const code = digits.join('')
     if (!isValidRoomId(code)) { setError('Enter a valid 3-digit code'); return }
     if (!playerName) { setError('Set a name first'); return }
+    if (!socket.connected) socket.connect()
+    playKeyThock(190)
     setLoading(true)
     setError('')
 
@@ -91,30 +71,45 @@ export default function JoinRoomModal({ isOpen, onClose, game, playerName, onErr
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`${game.emoji} Join ${game.name} Room`}>
-      <p className="text-slate-400 text-sm mb-5">Enter the 3-digit room code.</p>
-
-      {/* 3-digit input */}
-      <div className="flex gap-3 justify-center mb-5">
-        {digits.map((d, i) => (
-          <input
-            key={i}
-            ref={inputRefs[i]}
-            className="w-16 h-16 text-center text-3xl font-mono font-black bg-zinc-950 border border-zinc-800 rounded-2xl text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-inner"
-            value={d}
-            maxLength={1}
-            inputMode="numeric"
-            onChange={e => handleDigit(i, e.target.value)}
-            onKeyDown={e => handleKeyDown(i, e)}
+    <Modal isOpen={isOpen} onClose={onClose} title={`Join ${game.name} Room`}>
+      <form onSubmit={handleJoin} className="space-y-4">
+        <div className="flex items-center gap-3 px-3 py-2 rounded-xl recessed-well">
+          <img
+            src={game.image}
+            alt={game.name}
+            className="w-8 h-8 rounded-lg object-cover border border-white/10 flex-shrink-0"
           />
-        ))}
-      </div>
+          <p className="text-[#8a919e] text-xs">
+            Enter the 3-digit room code shared by the host.
+          </p>
+        </div>
 
-      {error && <p className="text-red-400 text-sm mb-3 text-center">{error}</p>}
+        {/* 3-digit keycap input */}
+        <div className="flex gap-3 justify-center py-1">
+          {digits.map((d, i) => (
+            <input
+              key={i}
+              ref={inputRefs[i]}
+              className="w-16 h-16 text-center text-3xl font-mono font-black bg-[#0c0e13] border border-white/[0.1] rounded-2xl text-[#f2ece1] focus:outline-none focus:border-[#e07a22] focus:ring-1 focus:ring-[#e07a22]/50 shadow-[inset_0_2px_6px_rgba(0,0,0,0.7)] transition-all"
+              value={d}
+              maxLength={1}
+              inputMode="numeric"
+              onChange={e => handleDigit(i, e.target.value)}
+              onKeyDown={e => handleKeyDown(i, e)}
+            />
+          ))}
+        </div>
 
-      <Button variant="primary" loading={loading} onClick={handleJoin} className="w-full">
-        Join Room
-      </Button>
+        {error && (
+          <p className="text-[#fde8e4] text-xs font-mono text-center bg-[#d9482b]/15 border border-[#d9482b]/40 p-2 rounded-xl">
+            {error}
+          </p>
+        )}
+
+        <Button type="submit" variant="primary" loading={loading} silent className="w-full py-3 text-xs font-mono uppercase tracking-wider">
+          Join Room
+        </Button>
+      </form>
     </Modal>
   )
 }

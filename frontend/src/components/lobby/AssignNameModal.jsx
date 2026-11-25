@@ -1,15 +1,15 @@
 /**
  * FILE: frontend/src/components/lobby/AssignNameModal.jsx
- * PURPOSE: Welcome and name assignment modal shown to new visitors on entry,
- *          or when clicking to change their player name.
+ * PURPOSE: Welcome and player tag assignment modal styled in TE-01 Tactile Console.
  */
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { User, Dices, ArrowRight, Check } from 'lucide-react'
+import { User, Dices, ArrowRight } from 'lucide-react'
 import { usePlayerStore } from '../../store'
 import { generateName } from '../../utils/nameGenerator'
 import { setNameConfirmed } from '../../utils/localStorage'
+import { playKeyThock, playFlipClack } from '../../utils/uiAudio'
 import Avatar from '../ui/Avatar'
 
 export default function AssignNameModal({ isOpen, onClose }) {
@@ -25,6 +25,7 @@ export default function AssignNameModal({ isOpen, onClose }) {
   }, [isOpen, currentName])
 
   function handleRandomize() {
+    playFlipClack()
     setNameInput(generateName())
     setError('')
   }
@@ -41,6 +42,7 @@ export default function AssignNameModal({ isOpen, onClose }) {
       return
     }
 
+    playKeyThock(195)
     setName(trimmed)
     setNameConfirmed(true)
     onClose()
@@ -48,7 +50,6 @@ export default function AssignNameModal({ isOpen, onClose }) {
 
   if (!isOpen) return null
 
-  // Compute color index for avatar preview based on name hash
   const colorIndex = (nameInput.charCodeAt(0) || 0) % 6
 
   return (
@@ -56,7 +57,7 @@ export default function AssignNameModal({ isOpen, onClose }) {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         {/* Backdrop */}
         <motion.div
-          className="fixed inset-0 bg-black/75 backdrop-blur-md"
+          className="fixed inset-0 bg-[#090a0d]/80 backdrop-blur-[4px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -65,36 +66,38 @@ export default function AssignNameModal({ isOpen, onClose }) {
           }}
         />
 
-        {/* Modal Window */}
+        {/* Modal Chassis */}
         <motion.div
-          className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl z-10 overflow-hidden"
-          initial={{ scale: 0.92, opacity: 0, y: 15 }}
+          className="relative w-full max-w-md bg-[#171a21] border border-white/[0.08] rounded-2xl p-6 shadow-[0_24px_60px_rgba(0,0,0,0.75),inset_0_1px_0_rgba(255,255,255,0.07)] z-10 overflow-hidden"
+          initial={{ scale: 0.93, opacity: 0, y: 14 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.92, opacity: 0, y: 15 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+          exit={{ scale: 0.94, opacity: 0, y: 10 }}
+          transition={{ type: 'spring', stiffness: 460, damping: 30 }}
         >
-          {/* Subtle top accent line */}
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-60" />
+          {/* Top accent rail (amber, zero purple/blue) */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#e07a22]/75" />
 
           {/* Header */}
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-zinc-200 mb-3 shadow-inner">
-              <User className="w-6 h-6 text-blue-400" />
+          <div className="flex flex-col items-center text-center mb-5">
+            <div className="w-12 h-12 rounded-xl recessed-well flex items-center justify-center text-[#e07a22] mb-3">
+              <User className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-bold text-white tracking-tight">
+            <h2 className="text-xl font-extrabold text-[#f2ece1] tracking-tight">
               Welcome to GameZone
             </h2>
-            <p className="text-sm text-zinc-400 mt-1">
-              Choose your player name to join and create game rooms.
+            <p className="text-xs sm:text-sm text-[#8a919e] mt-1">
+              Set your player tag before creating or joining a room.
             </p>
           </div>
 
-          {/* Avatar live preview */}
-          <div className="flex items-center justify-center gap-3 p-3 bg-zinc-950/60 border border-zinc-800/80 rounded-xl mb-5">
+          {/* Live Avatar Badge Preview */}
+          <div className="flex items-center gap-3 p-3 recessed-well rounded-xl mb-5">
             <Avatar name={nameInput || '?'} index={colorIndex} size="md" />
-            <div className="text-left">
-              <p className="text-xs text-zinc-500 font-medium">Player Tag Preview</p>
-              <p className="text-sm font-semibold text-zinc-200 font-mono truncate max-w-[200px]">
+            <div className="text-left min-w-0">
+              <p className="text-[10px] font-mono uppercase tracking-wider text-[#8a919e]">
+                Player Tag Preview
+              </p>
+              <p className="text-sm font-bold text-[#f2ece1] font-mono truncate max-w-[220px]">
                 {nameInput || 'Enter your name...'}
               </p>
             </div>
@@ -103,7 +106,7 @@ export default function AssignNameModal({ isOpen, onClose }) {
           {/* Input Form */}
           <form onSubmit={handleConfirm} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-mono font-semibold text-[#8a919e] uppercase tracking-wider mb-1.5">
                 Display Name
               </label>
               <div className="flex gap-2">
@@ -117,30 +120,29 @@ export default function AssignNameModal({ isOpen, onClose }) {
                     if (error) setError('')
                   }}
                   placeholder="e.g. ShadowFox"
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-medium transition-all"
+                  className="flex-1 bg-[#0c0e13] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-[#f2ece1] placeholder-zinc-600 focus:outline-none focus:border-[#e07a22] focus:ring-1 focus:ring-[#e07a22]/40 font-medium shadow-[inset_0_2px_6px_rgba(0,0,0,0.65)] transition-all"
                 />
                 <button
                   type="button"
                   onClick={handleRandomize}
                   title="Randomize name"
-                  className="px-3.5 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/60 rounded-xl text-zinc-300 hover:text-white transition-all flex items-center justify-center group"
+                  className="keycap-btn px-3.5 py-2.5 rounded-xl text-zinc-300 hover:text-[#f2ece1] flex items-center justify-center group cursor-pointer"
                 >
                   <Dices className="w-5 h-5 group-hover:rotate-45 transition-transform duration-200" />
                 </button>
               </div>
               {error ? (
-                <p className="text-xs text-red-400 mt-1.5">{error}</p>
+                <p className="text-xs font-mono text-[#f87171] mt-1.5">{error}</p>
               ) : (
-                <p className="text-[11px] text-zinc-500 mt-1.5">
-                  1–20 characters. You can change this anytime from the menu.
+                <p className="text-[11px] text-[#8a919e] mt-1.5">
+                  1–20 characters. Editable anytime from the top bar.
                 </p>
               )}
             </div>
 
-            {/* Action Button */}
             <button
               type="submit"
-              className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 active:scale-[0.99]"
+              className="keycap-primary w-full py-3 px-4 rounded-xl font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Continue as {nameInput.trim() || 'Player'}</span>
               <ArrowRight className="w-4 h-4" />

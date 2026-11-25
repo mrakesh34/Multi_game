@@ -1,11 +1,6 @@
 /**
  * FILE: frontend/src/games/chess/ChessPiece.jsx
- * PURPOSE: Draggable and clickable chess piece using Unicode typography.
- *
- * PROPS:
- *   piece       : { type: 'p'|'n'|'b'|'r'|'q'|'k', color: 'w'|'b' }
- *   isDraggable : boolean
- *   onSelect    : function callback
+ * PURPOSE: Tactile chess piece using crisp Unicode typography and spring motion.
  */
 
 import { motion } from 'framer-motion'
@@ -18,14 +13,21 @@ export default function ChessPiece({ piece, isDraggable, onSelect }) {
 
   return (
     <motion.div
-      className={`text-4xl sm:text-5xl font-normal select-none ${
-        isDraggable ? 'cursor-grab active:cursor-grabbing hover:scale-110' : 'cursor-default'
-      } ${piece.color === 'w' ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]' : 'text-slate-900 drop-shadow-[0_1px_1px_rgba(255,255,255,0.4)]'}`}
+      initial={{ scale: 0.9 }}
+      animate={{ scale: 1 }}
+      transition={{ type: 'spring', stiffness: 480, damping: 30 }}
+      className={`text-3xl sm:text-5xl leading-none font-normal select-none ${
+        isDraggable ? 'cursor-grab active:cursor-grabbing hover:scale-110' : 'cursor-pointer'
+      } ${
+        piece.color === 'w'
+          ? 'text-[#fffaf0] drop-shadow-[0_2px_3px_rgba(0,0,0,0.75)]'
+          : 'text-[#14171f] drop-shadow-[0_1px_0_rgba(255,255,255,0.3)]'
+      }`}
       drag={isDraggable}
       dragElastic={0.1}
       dragMomentum={false}
-      whileHover={isDraggable ? { scale: 1.15 } : {}}
-      whileTap={isDraggable ? { scale: 0.95 } : {}}
+      whileHover={isDraggable ? { scale: 1.12 } : { scale: 1.05 }}
+      whileTap={{ scale: 0.94 }}
       onClick={onSelect}
     >
       {unicode}
