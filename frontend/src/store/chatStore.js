@@ -27,8 +27,8 @@ import { create } from 'zustand'
 const MAX_MESSAGES = 100
 
 export const useChatStore = create((set, get) => ({
-  messages:    [],
-  isOpen:      false,
+  messages: [],
+  isOpen: false,
   unreadCount: 0,
 
   addMessage: (msg) =>
