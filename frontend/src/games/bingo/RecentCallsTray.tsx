@@ -71,20 +71,18 @@ export const RecentCallsTray: React.FC<RecentCallsTrayProps> = ({
                 >
                   {/* Soft Diffused Contact Shadow Underneath (Grounding on Tray) */}
                   <div
-                    className={`absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full pointer-events-none transition-all ${
-                      isLatest
-                        ? 'w-9 h-2 bg-black/60 blur-[2px]'
-                        : 'w-7 h-1.5 bg-black/50 blur-[2px]'
-                    }`}
+                    className={`absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full pointer-events-none transition-all ${isLatest
+                      ? 'w-9 h-2 bg-black/60 blur-[2px]'
+                      : 'w-7 h-1.5 bg-black/50 blur-[2px]'
+                      }`}
                   />
 
                   {/* Matte Ceramic Sphere */}
                   <div
-                    className={`rounded-full flex items-center justify-center font-mono font-bold transition-all relative overflow-hidden ${
-                      isLatest
-                        ? 'w-11 h-11 sm:w-12 sm:h-12 text-sm sm:text-base border border-amber-400/40'
-                        : 'w-9 h-9 sm:w-10 sm:h-10 text-xs sm:text-sm border border-white/[0.08]'
-                    }`}
+                    className={`rounded-full flex items-center justify-center font-mono font-bold transition-all relative overflow-hidden ${isLatest
+                      ? 'w-11 h-11 sm:w-12 sm:h-12 text-sm sm:text-base border border-amber-400/40'
+                      : 'w-9 h-9 sm:w-10 sm:h-10 text-xs sm:text-sm border border-white/[0.08]'
+                      }`}
                     style={{
                       fontVariantNumeric: 'tabular-nums',
                       // Subtle off-center radial gradient (matte finish, no cheap plastic gloss)
