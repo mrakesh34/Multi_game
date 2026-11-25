@@ -3,7 +3,7 @@
  * PURPOSE: Minimal, responsive waiting room page shown after creating or joining a room.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { LogOut, Play, Users, CheckCircle2, Circle, AlertCircle, Home } from 'lucide-react'
@@ -14,6 +14,7 @@ import Toast from '../ui/Toast'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 import Spinner from '../ui/Spinner'
+import BingoLobby from '../../games/bingo/BingoLobby'
 import socket from '../../socket/socket'
 import { EVENTS } from '../../socket/events'
 import { useRoomStore, usePlayerStore, useChatStore } from '../../store'
@@ -29,6 +30,7 @@ export default function RoomLobby() {
   const { roomId, game, players } = useRoomStore()
   const setRoom = useRoomStore((s) => s.setRoom)
   const setPlayers = useRoomStore((s) => s.setPlayers)
+  const clearRoom = useRoomStore((s) => s.clearRoom)
   const setMessages = useChatStore((s) => s.setMessages)
 
   const { socketId, name: myName, setName, setColorIndex } = usePlayerStore()
@@ -39,6 +41,8 @@ export default function RoomLobby() {
   const [joining, setJoining] = useState(false)
   const [startedError, setStartedError] = useState(false)
   const [joinError, setJoinError] = useState('')
+  const leftExplicitlyRef = useRef(false)
+  const unmountLeaveTimerRef = useRef(null)
 
   useRoom({
     onError: (code, msg) => {
@@ -46,6 +50,29 @@ export default function RoomLobby() {
       setStarting(false)
     },
   })
+
+  // Leave room if user navigates away (e.g. Browser Back) without starting the game.
+  // Uses a short timer so React 18 StrictMode double-mount cancels it cleanly.
+  useEffect(() => {
+    if (unmountLeaveTimerRef.current) {
+      clearTimeout(unmountLeaveTimerRef.current)
+      unmountLeaveTimerRef.current = null
+    }
+    leftExplicitlyRef.current = false
+
+    return () => {
+      unmountLeaveTimerRef.current = setTimeout(() => {
+        const path = window.location.pathname
+        const stillInRoomOrGame =
+          path.includes('/room/') || path.includes('/play/') || path.includes('/game/')
+        const store = useRoomStore.getState()
+        if (!leftExplicitlyRef.current && !stillInRoomOrGame && store.roomId && store.status === 'waiting') {
+          socket.emit(EVENTS.LEAVE_ROOM, {})
+          store.clearRoom()
+        }
+      }, 80)
+    }
+  }, [routeRoomId])
 
   // Direct URL joining: if user lands directly on /:game/room/:roomId or /room/:roomId
   useEffect(() => {
@@ -76,7 +103,9 @@ export default function RoomLobby() {
       setRoom({ roomId: data.room_id, game: data.game, status: 'waiting' })
       setPlayers(data.players)
       setMessages(data.chat_log || [])
-      const me = data.players.find((p) => p.name === activePlayerName)
+      const me = data.players.find(
+        (p) => p.name.trim().toLowerCase() === activePlayerName.trim().toLowerCase()
+      )
       if (me) setColorIndex(me.color_index)
 
       // Replace URL with semantic game route if needed
@@ -95,70 +124,100 @@ export default function RoomLobby() {
       }
     }
 
-    socket.once(EVENTS.ROOM_JOINED, onJoined)
-    socket.once(EVENTS.ROOM_ERROR, onRoomError)
-    socket.emit(EVENTS.JOIN_ROOM, { room_id: targetRoomId, player_name: activePlayerName })
+    // Defer emit by 0ms so React 18 StrictMode's synthetic first mount cancels cleanly
+    const joinTimer = setTimeout(() => {
+      socket.once(EVENTS.ROOM_JOINED, onJoined)
+      socket.once(EVENTS.ROOM_ERROR, onRoomError)
+      socket.emit(EVENTS.JOIN_ROOM, { room_id: targetRoomId, player_name: activePlayerName })
+    }, 0)
 
     return () => {
+      clearTimeout(joinTimer)
       socket.off(EVENTS.ROOM_JOINED, onJoined)
       socket.off(EVENTS.ROOM_ERROR, onRoomError)
     }
   }, [routeRoomId, roomId, myName])
 
+  const isBingoRoom = game === 'bingo' || routeGame === 'bingo'
+
+  const renderStateShell = (content) => {
+    if (!isBingoRoom) {
+      return <LobbyLayout>{content}</LobbyLayout>
+    }
+    return (
+      <div
+        className="w-screen h-[100dvh] overflow-hidden flex items-center justify-center px-4 select-none"
+        style={{
+          backgroundColor: '#111318',
+          backgroundImage:
+            'radial-gradient(circle at 50% 0%, #1c202a 0%, #111318 70%), radial-gradient(circle at 20% 80%, rgba(28, 32, 42, 0.5) 0%, transparent 60%)',
+        }}
+      >
+        {content}
+      </div>
+    )
+  }
+
   // If game is already started, show friendly dialog
   if (startedError) {
-    return (
-      <LobbyLayout>
-        <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-7 text-center shadow-2xl backdrop-blur-xl">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-3xl">
-            🎮
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2 tracking-tight">Game Already Started</h2>
-          <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
-            The match in room <strong className="text-white font-mono">#{routeRoomId}</strong> is already in progress and cannot accept new players right now.
-          </p>
-          <div className="flex gap-3">
-            <Button variant="ghost" onClick={() => navigate('/')} className="flex-1">
-              Browse Games
-            </Button>
-            <Button variant="primary" onClick={() => navigate('/')} className="flex-1">
-              Create a Room
-            </Button>
-          </div>
+    return renderStateShell(
+      <div
+        className={`w-full max-w-md rounded-3xl p-7 text-center shadow-2xl ${
+          isBingoRoom
+            ? 'bg-[#171a21] border border-white/[0.06] font-mono'
+            : 'bg-zinc-900 border border-zinc-800 backdrop-blur-xl'
+        }`}
+      >
+        <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-3xl">
+          🎮
         </div>
-      </LobbyLayout>
+        <h2 className="text-xl font-bold text-[#e2e8f0] mb-2 tracking-tight">Game Already Started</h2>
+        <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
+          The match in room <strong className="text-[#fffbeb] font-mono">#{routeRoomId}</strong> is already in progress and cannot accept new players right now.
+        </p>
+        <div className="flex gap-3">
+          <Button variant="ghost" onClick={() => navigate('/')} className="flex-1">
+            Browse Games
+          </Button>
+          <Button variant="primary" onClick={() => navigate('/')} className="flex-1">
+            Create a Room
+          </Button>
+        </div>
+      </div>
     )
   }
 
   // If room not found or join failed
   if (joinError) {
-    return (
-      <LobbyLayout>
-        <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-7 text-center shadow-2xl backdrop-blur-xl">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
-            <AlertCircle className="w-7 h-7" />
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2 tracking-tight">Room Unavailable</h2>
-          <p className="text-sm text-zinc-400 mb-6">{joinError}</p>
-          <Button variant="primary" onClick={() => navigate('/')} className="w-full">
-            Back to Home
-          </Button>
+    return renderStateShell(
+      <div
+        className={`w-full max-w-md rounded-3xl p-7 text-center shadow-2xl ${
+          isBingoRoom
+            ? 'bg-[#171a21] border border-white/[0.06] font-mono'
+            : 'bg-zinc-900 border border-zinc-800 backdrop-blur-xl'
+        }`}
+      >
+        <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+          <AlertCircle className="w-7 h-7" />
         </div>
-      </LobbyLayout>
+        <h2 className="text-xl font-bold text-[#e2e8f0] mb-2 tracking-tight">Room Unavailable</h2>
+        <p className="text-sm text-zinc-400 mb-6">{joinError}</p>
+        <Button variant="primary" onClick={() => navigate('/')} className="w-full">
+          Back to Home
+        </Button>
+      </div>
     )
   }
 
   // Loading state when joining via link
   if (joining || (!roomId && routeRoomId)) {
-    return (
-      <LobbyLayout>
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Spinner className="w-8 h-8 text-blue-500 mb-4" />
-          <p className="text-sm font-medium text-zinc-300">
-            Joining room <span className="font-mono text-white">#{routeRoomId}</span>...
-          </p>
-        </div>
-      </LobbyLayout>
+    return renderStateShell(
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <Spinner className={`w-8 h-8 mb-4 ${isBingoRoom ? 'text-amber-400' : 'text-blue-500'}`} />
+        <p className={`text-sm font-medium text-zinc-300 ${isBingoRoom ? 'font-mono' : ''}`}>
+          Joining room <span className="font-mono text-[#fffbeb]">#{routeRoomId}</span>...
+        </p>
+      </div>
     )
   }
 
@@ -188,8 +247,34 @@ export default function RoomLobby() {
     socket.emit(EVENTS.START_GAME, {})
   }
   function handleLeave() {
+    leftExplicitlyRef.current = true
     socket.emit(EVENTS.LEAVE_ROOM, {})
+    clearRoom()
     navigate('/')
+  }
+
+  if (game === 'bingo') {
+    return (
+      <>
+        <BingoLobby
+          roomId={roomId}
+          players={players}
+          me={me}
+          socketId={socketId}
+          myName={myName}
+          maxPlayers={maxSlots}
+          isHost={isHost}
+          connectedCount={connectedPlayers.length}
+          allReady={allReady}
+          canStart={canStart}
+          starting={starting}
+          onReady={handleReady}
+          onStart={handleStart}
+          onLeave={handleLeave}
+        />
+        <Toast message={toast?.message} type={toast?.type} onDone={() => setToast(null)} />
+      </>
+    )
   }
 
   return (

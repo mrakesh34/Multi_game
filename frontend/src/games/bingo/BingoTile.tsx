@@ -15,9 +15,9 @@ import { motion, type Transition } from 'framer-motion'
 
 export const TACTILE_SPRING: Transition = {
   type: 'spring',
-  stiffness: 500,
-  damping: 28,
-  mass: 0.8,
+  stiffness: 520,
+  damping: 38,
+  mass: 0.75,
 }
 
 export interface BingoTileProps {
@@ -32,6 +32,7 @@ export interface BingoTileProps {
   hasLightSweep?: boolean
   onClick?: (val: number) => void
   disabled?: boolean
+  readonly?: boolean
   size?: 'normal' | 'mini'
 }
 
@@ -47,15 +48,17 @@ export const BingoTile: React.FC<BingoTileProps> = ({
   hasLightSweep = false,
   onClick,
   disabled = false,
+  readonly = false,
   size = 'normal',
 }) => {
   const isMini = size === 'mini'
 
   // Dynamic animation target based on marked state and domino wave
   const animationVariants = useMemo(() => {
+    const depressedY = isMini ? 2 : 3
     if (dominoWaveTrigger > 0 && isWinningCell) {
       return {
-        y: [isMarked ? 3 : 0, -6, isMarked ? 3 : 0],
+        y: [isMarked ? depressedY : 0, -6, isMarked ? depressedY : 0],
         transition: {
           delay: dominoDelay,
           duration: 0.35,
@@ -65,10 +68,10 @@ export const BingoTile: React.FC<BingoTileProps> = ({
     }
 
     return {
-      y: isMarked ? 3 : 0,
+      y: isMarked ? depressedY : 0,
       transition: TACTILE_SPRING,
     }
-  }, [isMarked, dominoWaveTrigger, dominoDelay, isWinningCell])
+  }, [isMarked, isMini, dominoWaveTrigger, dominoDelay, isWinningCell])
 
   // Keycap physical box-shadows matching mechanical keyboard specifications
   const keycapStyle = useMemo(() => {
@@ -95,10 +98,12 @@ export const BingoTile: React.FC<BingoTileProps> = ({
     return {
       background: 'linear-gradient(180deg, #282e3d 0%, #202531 100%)',
       color: '#e2e8f0',
-      boxShadow: '0 5px 0 #12151c, 0 8px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12)',
+      boxShadow: isMini
+        ? '0 3px 0 #12151c, 0 5px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12)'
+        : '0 5px 0 #12151c, 0 8px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12)',
       border: '1px solid rgba(255,255,255,0.06)',
     }
-  }, [isMarked, isWinningCell])
+  }, [isMarked, isWinningCell, isMini])
 
   return (
     <motion.button
@@ -110,22 +115,21 @@ export const BingoTile: React.FC<BingoTileProps> = ({
       whileHover={
         isClickable && !isMarked
           ? {
-              y: -1,
-              boxShadow:
-                '0 6px 0 #12151c, 0 10px 14px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              transition: TACTILE_SPRING,
-            }
+            y: -1,
+            boxShadow:
+              '0 6px 0 #12151c, 0 10px 14px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            transition: TACTILE_SPRING,
+          }
           : undefined
       }
       whileTap={
         isClickable && !isMarked
           ? {
-              scale: 0.96,
-              y: 4,
-              boxShadow: '0 1px 0 #12151c, 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
-              transition: { duration: 0.05 },
-            }
+            y: 3,
+            boxShadow: '0 1px 0 #12151c, 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
+            transition: { duration: 0.05 },
+          }
           : undefined
       }
       onClick={() => {
@@ -133,15 +137,13 @@ export const BingoTile: React.FC<BingoTileProps> = ({
           onClick?.(value)
         }
       }}
-      className={`relative aspect-square flex items-center justify-center rounded-xl select-none outline-none overflow-hidden ${
-        isMini ? 'h-8 sm:h-9 text-xs' : 'h-13 sm:h-16 w-full text-lg sm:text-2xl'
-      } ${
-        isClickable && !isMarked
+      className={`relative aspect-square flex items-center justify-center select-none outline-none overflow-hidden w-full h-full ${isMini ? 'rounded-lg text-[clamp(0.72rem,1.4vw,0.9rem)]' : 'rounded-xl text-[clamp(1rem,2.4dvh,1.5rem)]'
+        } ${isClickable && !isMarked
           ? 'cursor-pointer'
-          : isMarked
-          ? 'cursor-default'
-          : 'cursor-not-allowed opacity-90'
-      }`}
+          : isMarked || readonly || isMini
+            ? 'cursor-default'
+            : 'cursor-not-allowed opacity-90'
+        }`}
       style={keycapStyle}
     >
       {/* Tabular digit representation (zero horizontal jitter, 100% legible) */}
@@ -155,9 +157,8 @@ export const BingoTile: React.FC<BingoTileProps> = ({
       {/* Recessed corner dot indicator for marked state (NO lines/checks over digits) */}
       {isMarked && (
         <span
-          className={`absolute top-1.5 right-1.5 rounded-full pointer-events-none ${
-            isMini ? 'w-1 h-1' : 'w-2 h-2'
-          }`}
+          className={`absolute rounded-full pointer-events-none ${isMini ? 'top-1 right-1 w-1.5 h-1.5' : 'top-1.5 right-1.5 w-2 h-2'
+            }`}
           style={{
             background: isWinningCell ? '#fef3c7' : '#78350f',
             boxShadow: isWinningCell

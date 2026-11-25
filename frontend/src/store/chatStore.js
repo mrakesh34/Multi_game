@@ -28,14 +28,14 @@ const MAX_MESSAGES = 100
 
 export const useChatStore = create((set, get) => ({
   messages:    [],
-  isOpen:      true,
+  isOpen:      false,
   unreadCount: 0,
 
   addMessage: (msg) =>
     set((state) => {
       const updated = [...state.messages, msg].slice(-MAX_MESSAGES)
       return {
-        messages:    updated,
+        messages: updated,
         unreadCount: state.isOpen ? 0 : state.unreadCount + 1,
       }
     }),

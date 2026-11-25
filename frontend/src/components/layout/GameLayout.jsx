@@ -5,7 +5,7 @@
  *          when the transparent chat panel is toggled.
  */
 
-import { lazy, Suspense, useState, useEffect } from 'react'
+import { lazy, Suspense, useState, useEffect, useRef } from 'react'
 import { useNavigate, Navigate, useParams } from 'react-router-dom'
 import { Volume2, VolumeX, MessageSquare, ArrowLeft, Gamepad2, Copy, Check } from 'lucide-react'
 import { useRoomStore, usePlayerStore, useChatStore } from '../../store'
@@ -38,6 +38,8 @@ export default function GameLayout() {
   const [toast, setToast] = useState(null)
   const [soundOn, setSoundOn] = useState(getSoundEnabled())
   const [copiedCode, setCopiedCode] = useState(false)
+  const leftExplicitlyRef = useRef(false)
+  const unmountLeaveTimerRef = useRef(null)
 
   const roomId = storeRoomId || routeRoomId
   const game = storeGame || routeGame || 'bingo'
@@ -47,6 +49,28 @@ export default function GameLayout() {
       setRoom({ roomId: routeRoomId, game: routeGame || 'bingo', status: 'playing' })
     }
   }, [routeRoomId, routeGame, storeRoomId, storeGame, setRoom])
+
+  // If user exits via Browser Back out of game routes, notify server so their slot is removed
+  useEffect(() => {
+    if (unmountLeaveTimerRef.current) {
+      clearTimeout(unmountLeaveTimerRef.current)
+      unmountLeaveTimerRef.current = null
+    }
+    leftExplicitlyRef.current = false
+
+    return () => {
+      unmountLeaveTimerRef.current = setTimeout(() => {
+        const path = window.location.pathname
+        const stillInRoomOrGame =
+          path.includes('/room/') || path.includes('/play/') || path.includes('/game/')
+        const store = useRoomStore.getState()
+        if (!leftExplicitlyRef.current && !stillInRoomOrGame && store.roomId) {
+          socket.emit(EVENTS.LEAVE_ROOM, {})
+          store.clearRoom()
+        }
+      }, 80)
+    }
+  }, [routeRoomId])
 
   // Register room-level socket listeners
   useRoom({
@@ -65,6 +89,7 @@ export default function GameLayout() {
   }
 
   function handleGoHome() {
+    leftExplicitlyRef.current = true
     socket.emit(EVENTS.LEAVE_ROOM, {})
     clearRoom()
     navigate('/')
@@ -77,7 +102,7 @@ export default function GameLayout() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-zinc-950 text-zinc-100 selection:bg-blue-600 selection:text-white">
+    <div className="flex flex-col h-[100dvh] w-full overflow-hidden bg-zinc-950 text-zinc-100 selection:bg-blue-600 selection:text-white">
       {/* Sleek Top Navigation Bar */}
       <header className="flex items-center justify-between px-4 sm:px-6 py-2.5 bg-zinc-950 border-b border-zinc-900 z-20 flex-shrink-0">
         {/* Left: Back / Home + Game Label */}
@@ -165,7 +190,7 @@ export default function GameLayout() {
       {/* Main Body with Fixed Board Layout and Floating Transparent Chat */}
       <div className="relative flex-1 w-full h-full overflow-hidden">
         {/* Game Viewport: occupies 100% width and height, completely centered */}
-        <main className="w-full h-full overflow-auto relative flex flex-col">
+        <main className="w-full h-full overflow-hidden relative flex flex-col">
           {GameComponent ? (
             <Suspense
               fallback={

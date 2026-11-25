@@ -45,10 +45,14 @@ export function useRoom({ onError } = {}) {
     function onPlayerLeft(data)         { setPlayers(data.players) }
     function onReadyChanged(data)       { setPlayers(data.players) }
     function onPlayerDisconnected(data) {
-      // Mark player as disconnected without removing them
-      setPlayers(useRoomStore.getState().players.map(p =>
-        p.name === data.player_name ? { ...p, is_connected: false } : p
-      ))
+      if (data?.players) {
+        setPlayers(data.players)
+      } else {
+        const targetName = (data?.player_name || '').trim().toLowerCase()
+        setPlayers(useRoomStore.getState().players.map(p =>
+          p.name.trim().toLowerCase() === targetName ? { ...p, is_connected: false } : p
+        ))
+      }
     }
     function onPlayerReconnected(data) {
       if (data.players) {
@@ -75,9 +79,15 @@ export function useRoom({ onError } = {}) {
       navigate(`/${g}/room/${rId}`)
     }
     function onGameStateUpdate(data) { setGameState(data.game_state) }
-    function onGameOver(data)        { setStatus('finished') }
+    function onGameOver(data) {
+      if (data?.final_state) setGameState(data.final_state)
+      setStatus('finished')
+    }
     function onChatBroadcast(msg)    { addMessage(msg) }
-    function onRoomError(data)       { onError?.(data.code, data.message) }
+    function onRoomError(data) {
+      if (data?.players) setPlayers(data.players)
+      onError?.(data.code, data.message)
+    }
 
     socket.on(EVENTS.PLAYER_JOINED,        onPlayerJoined)
     socket.on(EVENTS.PLAYER_LEFT,          onPlayerLeft)

@@ -129,7 +129,7 @@ class BingoGame(BaseGame):
 
         # Then check any other players who reached 5+ lines on this number
         for ps in self._state["players"]:
-            if ps["socket_id"] != caller_player["socket_id"]:
+            if ps is not caller_player:
                 if not ps["is_finished"] and ps["lines_count"] >= WIN_LINES_TARGET:
                     newly_won.append(ps)
 

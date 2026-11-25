@@ -1,7 +1,7 @@
 /**
  * FILE: frontend/src/components/chat/ChatDrawer.jsx
- * PURPOSE: Tactile, collapsible side drawer for room chat.
- *          Clean dark-mode hardware aesthetic with zero heavy glassmorphism.
+ * PURPOSE: Lightweight, transparent floating chat overlay blended into the background.
+ *          No opaque sidebar box; uses internal scrollTop only so opening never shakes the screen.
  */
 
 import { useEffect, useRef } from 'react'
@@ -12,67 +12,68 @@ import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
 
 export default function ChatDrawer() {
-  const { messages, isOpen, unreadCount, setOpen, markRead } = useChatStore()
-  const bottomRef = useRef(null)
+  const { messages, isOpen, setOpen, markRead } = useChatStore()
+  const scrollContainerRef = useRef(null)
 
-  // Auto-scroll to bottom on new messages
+  // Scroll ONLY the internal overlay message list (never call scrollIntoView, which shifts parent viewports)
   useEffect(() => {
-    if (isOpen) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-      markRead()
+    if (!isOpen) return
+    markRead()
+    const el = scrollContainerRef.current
+    if (el) {
+      el.scrollTop = el.scrollHeight
     }
-  }, [messages, isOpen])
+  }, [messages, isOpen, markRead])
 
   return (
-    <div className="absolute top-0 right-0 bottom-0 z-40 pointer-events-none flex justify-end">
-      {/* Sleek Hardware Collapsible Drawer Panel (Overlay) */}
+    <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 pointer-events-none flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="pointer-events-auto w-80 sm:w-88 h-full bg-[#171a21] border-l border-white/[0.06] shadow-2xl flex flex-col"
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '100%', opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 32, mass: 0.8 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="pointer-events-auto w-[min(310px,calc(100vw-24px))] max-h-[min(340px,52dvh)] flex flex-col bg-transparent"
           >
-            {/* Machined Hardware Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-[#13151b]">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-amber-400" />
-                <span className="font-semibold text-[#e2e8f0] text-xs font-mono tracking-tight">Room Comm Channel</span>
-                <span
-                  className="text-[10px] text-zinc-400 font-mono"
-                  style={{ fontVariantNumeric: 'tabular-nums' }}
+            {/* Minimal floating control pill (no heavy sidebar header box) */}
+            <div className="flex items-center justify-end gap-2 px-1 pb-1.5">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#111318]/55 backdrop-blur-sm border border-white/[0.06] text-[10px] font-mono text-zinc-400">
+                <MessageSquare className="w-3 h-3 text-amber-400/85" />
+                <span>Chat ({messages.length})</span>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="p-0.5 rounded-full hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                  title="Hide chat overlay"
                 >
-                  ({messages.length})
-                </span>
+                  <X className="w-3 h-3" />
+                </button>
               </div>
-              <button
-                className="p-1 rounded-lg hover:bg-white/[0.06] text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
-                onClick={() => setOpen(false)}
-                title="Minimize chat"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
 
-            {/* Messages Body */}
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scrollbar-thin bg-transparent">
+            {/* Transparent floating messages list fading softly at the top */}
+            <div
+              ref={scrollContainerRef}
+              className="flex-1 min-h-0 overflow-y-auto px-1 py-2 flex flex-col gap-2 scrollbar-none bg-transparent"
+              style={{
+                maskImage: 'linear-gradient(to bottom, transparent 0%, black 14%, black 100%)',
+                WebkitMaskImage:
+                  'linear-gradient(to bottom, transparent 0%, black 14%, black 100%)',
+              }}
+            >
               {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center text-zinc-400 my-auto select-none">
-                  <div className="w-10 h-10 rounded-2xl bg-[#12151c] border border-white/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] flex items-center justify-center mb-2">
-                    <MessageSquare className="w-5 h-5 text-zinc-500" />
-                  </div>
-                  <p className="text-xs font-medium text-zinc-300 font-mono">No transmissions logged.</p>
-                  <p className="text-[11px] text-zinc-500 font-mono mt-0.5">Send a message to room players.</p>
+                <div className="py-4 px-2 text-right select-none">
+                  <p className="text-[11px] font-mono text-zinc-500">
+                    No messages yet — say hi to the room.
+                  </p>
                 </div>
               ) : (
                 messages.map((msg, i) => <ChatMessage key={i} message={msg} />)
               )}
-              <div ref={bottomRef} />
             </div>
 
-            {/* Input Footer */}
+            {/* Compact transparent input bar */}
             <ChatInput />
           </motion.div>
         )}

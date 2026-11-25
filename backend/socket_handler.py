@@ -26,22 +26,28 @@ EMIT HELPERS:
   emit_to_room(sio, room_id, event, data) — broadcast to all sockets in room
 """
 
+import asyncio
 import time
 from typing import Any
 
 import socketio
 
-from config import MAX_CHAT_LOG
+from config import MAX_CHAT_LOG, RECONNECT_TTL
 from room_manager import room_manager
 from games import GAME_REGISTRY
+
+LOBBY_SOLO_DISCONNECT_TTL = 5  # seconds before an empty-lobby disconnect expires
 
 
 def register_handlers(sio: socketio.AsyncServer):
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
-    async def _emit_error(sid, code: str, message: str):
-        await sio.emit("room_error", {"code": code, "message": message}, to=sid)
+    async def _emit_error(sid, code: str, message: str, extra: dict = None):
+        payload = {"code": code, "message": message}
+        if extra:
+            payload.update(extra)
+        await sio.emit("room_error", payload, to=sid)
 
     def _player_dict(p) -> dict:
         return {
@@ -54,11 +60,30 @@ def register_handlers(sio: socketio.AsyncServer):
             "color_index": p.color_index,
         }
 
+    async def _cleanup_and_broadcast():
+        evictions = room_manager.cleanup_expired_disconnects(waiting_ttl=LOBBY_SOLO_DISCONNECT_TTL)
+        for ev in evictions:
+            room = ev["room"]
+            await sio.emit("player_left", {
+                "player_name": ", ".join(ev["removed_names"]),
+                "players": [_player_dict(p) for p in room.players],
+                "new_host": ev["new_host"],
+            }, room=ev["room_id"])
+
+    def _schedule_delayed_cleanup(delay_seconds: float):
+        async def _delayed():
+            await asyncio.sleep(delay_seconds)
+            await _cleanup_and_broadcast()
+        try:
+            asyncio.create_task(_delayed())
+        except RuntimeError:
+            pass
+
     # ── create_room ───────────────────────────────────────────────────────────
 
     @sio.on("create_room")
     async def on_create_room(sid: str, data: dict = None):
-        room_manager.cleanup_expired_disconnects()
+        await _cleanup_and_broadcast()
         data = data or {}
         try:
             game = data.get("game", "")
@@ -96,7 +121,7 @@ def register_handlers(sio: socketio.AsyncServer):
 
     @sio.on("join_room")
     async def on_join_room(sid: str, data: dict = None):
-        room_manager.cleanup_expired_disconnects()
+        await _cleanup_and_broadcast()
         data = data or {}
         try:
             raw_room_id = str(data.get("room_id", "")).strip()
@@ -137,7 +162,7 @@ def register_handlers(sio: socketio.AsyncServer):
 
     @sio.on("reconnect_room")
     async def on_reconnect_room(sid: str, data: dict = None):
-        room_manager.cleanup_expired_disconnects()
+        await _cleanup_and_broadcast()
         data = data or {}
         try:
             raw_room_id = str(data.get("room_id", "")).strip()
@@ -182,6 +207,33 @@ def register_handlers(sio: socketio.AsyncServer):
 
     @sio.on("disconnect")
     async def on_disconnect(sid: str):
+        room = room_manager.get_room_by_socket(sid)
+        if room is None:
+            return
+
+        # In a waiting lobby with other connected players, remove the leaver immediately
+        # so their slot (and any extra unlocked slot) closes cleanly without leaving an AWAY ghost.
+        if room.status == "waiting":
+            other_connected = any(p.is_connected and p.socket_id != sid for p in room.players)
+            if other_connected:
+                result = room_manager.leave_room(sid)
+                if result is None:
+                    return
+                updated_room, removed_player = result
+                if updated_room.room_id in room_manager.rooms:
+                    new_host = next((p for p in updated_room.players if p.is_host), None)
+                    await sio.emit("player_left", {
+                        "player_name": removed_player.name,
+                        "players": [_player_dict(p) for p in updated_room.players],
+                        "new_host": new_host.socket_id if new_host else None,
+                    }, room=updated_room.room_id)
+                return
+
+            # Solo player in waiting lobby (e.g. host refreshing): hold briefly before eviction
+            room = room_manager.mark_disconnected(sid)
+            _schedule_delayed_cleanup(LOBBY_SOLO_DISCONNECT_TTL + 0.25)
+            return
+
         room = room_manager.mark_disconnected(sid)
         if room is None:
             return
@@ -191,14 +243,16 @@ def register_handlers(sio: socketio.AsyncServer):
             await sio.emit("player_disconnected", {
                 "socket_id": sid,
                 "player_name": player.name,
-                "reconnect_expires_at": time.time() + 60,
+                "players": [_player_dict(p) for p in room.players],
+                "reconnect_expires_at": time.time() + RECONNECT_TTL,
             }, room=room.room_id)
+            _schedule_delayed_cleanup(RECONNECT_TTL + 0.5)
 
     # ── leave_room ────────────────────────────────────────────────────────────
 
     @sio.on("leave_room")
     async def on_leave_room(sid: str, data: dict = None):
-        room_manager.cleanup_expired_disconnects()
+        await _cleanup_and_broadcast()
         data = data or {}
         result = room_manager.leave_room(sid)
         if result is None:
@@ -219,7 +273,7 @@ def register_handlers(sio: socketio.AsyncServer):
 
     @sio.on("toggle_ready")
     async def on_toggle_ready(sid: str, data: dict = None):
-        room_manager.cleanup_expired_disconnects()
+        await _cleanup_and_broadcast()
         data = data or {}
         room = room_manager.get_room_by_socket(sid)
         if room is None:
@@ -242,7 +296,7 @@ def register_handlers(sio: socketio.AsyncServer):
 
     @sio.on("start_game")
     async def on_start_game(sid: str, data: dict = None):
-        room_manager.cleanup_expired_disconnects()
+        await _cleanup_and_broadcast()
         data = data or {}
         room = room_manager.get_room_by_socket(sid)
         if room is None:
@@ -255,13 +309,22 @@ def register_handlers(sio: socketio.AsyncServer):
         # All connected players must be ready
         connected = [p for p in room.players if p.is_connected]
         if not all(p.is_ready or p.is_host for p in connected):
-            return await _emit_error(sid, "NOT_ALL_READY", "All players must be ready.")
+            return await _emit_error(
+                sid,
+                "NOT_ALL_READY",
+                "All players must be ready.",
+                {"players": [_player_dict(p) for p in room.players]},
+            )
 
         # Minimum player count
-        from config import MAX_PLAYERS
         min_players = 2
         if len(connected) < min_players:
-            return await _emit_error(sid, "NOT_ENOUGH_PLAYERS", f"Need at least {min_players} players.")
+            return await _emit_error(
+                sid,
+                "NOT_ENOUGH_PLAYERS",
+                f"Need at least {min_players} players.",
+                {"players": [_player_dict(p) for p in room.players]},
+            )
 
         try:
             GameClass = GAME_REGISTRY[room.game]
@@ -280,7 +343,7 @@ def register_handlers(sio: socketio.AsyncServer):
 
     @sio.on("game_action")
     async def on_game_action(sid: str, data: dict = None):
-        room_manager.cleanup_expired_disconnects()
+        await _cleanup_and_broadcast()
         data = data or {}
         room = room_manager.get_room_by_socket(sid)
         if room is None or room.room_id not in _game_instances:
@@ -321,7 +384,7 @@ def register_handlers(sio: socketio.AsyncServer):
 
     @sio.on("chat_message")
     async def on_chat_message(sid: str, data: dict = None):
-        room_manager.cleanup_expired_disconnects()
+        await _cleanup_and_broadcast()
         data = data or {}
         room = room_manager.get_room_by_socket(sid)
         if room is None:
@@ -349,12 +412,36 @@ def register_handlers(sio: socketio.AsyncServer):
 
     @sio.on("play_again")
     async def on_play_again(sid: str, data: dict = None):
-        room_manager.cleanup_expired_disconnects()
+        await _cleanup_and_broadcast()
+        data = data or {}
         room = room_manager.get_room_by_socket(sid)
         if room is None:
             return await _emit_error(sid, "NOT_IN_ROOM", "You are not in a room.")
 
-        # Only the host can trigger rematch/replay
+        # Direct rematch mode (e.g. Bingo): any player in the room can trigger a fresh round immediately
+        if room.game == "bingo" and data.get("direct"):
+            # Ignore duplicate clicks if another player already restarted the round
+            if room.status == "playing" and room.room_id in _game_instances:
+                return
+
+            connected = [p for p in room.players if p.is_connected]
+            if len(connected) < 2:
+                return await _emit_error(sid, "NOT_ENOUGH_PLAYERS", "Need at least 2 players to play again.")
+
+            try:
+                GameClass = GAME_REGISTRY[room.game]
+                game_obj = GameClass(room.players)
+                initial_state = game_obj.initialize()
+                room.game_state = initial_state
+                room.status = "playing"
+                _game_instances[room.room_id] = game_obj
+
+                await sio.emit("game_started", {"game_state": initial_state}, room=room.room_id)
+            except Exception as e:
+                await _emit_error(sid, "START_FAILED", str(e))
+            return
+
+        # Default behavior for other games: only the host can reset back to lobby
         if room.host_socket_id != sid:
             return await _emit_error(sid, "NOT_HOST", "Only the host can start a rematch.")
 

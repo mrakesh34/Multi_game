@@ -108,8 +108,16 @@ class RoomManager:
         if room.status == "playing":
             raise ValueError("ROOM_STARTED")
 
-        # Reject if name taken (case-insensitive)
-        if any(p.name.lower() == name.lower() for p in room.players):
+        # Reject if name taken (case-insensitive), unless reclaiming own disconnected slot in waiting lobby
+        existing = next((p for p in room.players if p.name.lower() == name.lower()), None)
+        if existing is not None:
+            if room.status == "waiting" and not existing.is_connected:
+                existing.socket_id = socket_id
+                existing.is_connected = True
+                existing.disconnect_time = None
+                if existing.is_host:
+                    room.host_socket_id = socket_id
+                return room, existing
             raise ValueError("NAME_TAKEN")
 
         # Reject if room is full
@@ -201,23 +209,55 @@ class RoomManager:
 
         return player
 
-    def cleanup_expired_disconnects(self):
+    def cleanup_expired_disconnects(self, waiting_ttl: Optional[float] = None):
         """
-        Remove players whose reconnect window (60 s) has expired.
-        Call this at the start of every socket event handler to keep state clean.
-        Empty rooms are removed.
+        Remove players whose reconnect window has expired.
+        Uses waiting_ttl (if provided) for 'waiting' rooms and RECONNECT_TTL (60 s) otherwise.
+        Transfers host if the expired player was host and removes empty rooms.
+        Returns a list of eviction dicts so callers can broadcast player_left.
         """
         now = time.time()
         to_delete = []
+        evictions = []
+
         for room_id, room in self.rooms.items():
-            room.players = [
-                p for p in room.players
-                if p.is_connected or (p.disconnect_time is not None and now - p.disconnect_time <= RECONNECT_TTL)
-            ]
+            ttl = waiting_ttl if (waiting_ttl is not None and room.status == "waiting") else RECONNECT_TTL
+            kept = []
+            removed = []
+            for p in room.players:
+                if p.is_connected or (p.disconnect_time is not None and now - p.disconnect_time <= ttl):
+                    kept.append(p)
+                else:
+                    removed.append(p)
+
+            if not removed:
+                continue
+
+            room.players = kept
             if not room.players:
                 to_delete.append(room_id)
+                continue
+
+            if any(p.is_host for p in removed) or not any(p.is_host for p in room.players):
+                for p in room.players:
+                    p.is_host = False
+                new_host = next((p for p in room.players if p.is_connected), room.players[0])
+                new_host.is_host = True
+                room.host_socket_id = new_host.socket_id
+            else:
+                new_host = next((p for p in room.players if p.is_host), None)
+
+            evictions.append({
+                "room_id": room_id,
+                "removed_names": [p.name for p in removed],
+                "room": room,
+                "new_host": new_host.socket_id if new_host else None,
+            })
+
         for rid in to_delete:
             del self.rooms[rid]
+
+        return evictions
 
 
 # ── Global singleton ──────────────────────────────────────────────────────────

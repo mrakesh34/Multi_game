@@ -26,18 +26,19 @@ export default function ChatInput() {
   }
 
   return (
-    <div className="border-t border-white/10 p-3 bg-white/[0.03] backdrop-blur-md">
-      <div className="flex items-center gap-2">
+    <div className="pt-1.5 bg-transparent">
+      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#111318]/55 border border-white/[0.08] backdrop-blur-md">
         <input
-          className="flex-1 bg-black/40 border border-white/15 rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all backdrop-blur-sm"
-          placeholder="Send a message..."
+          className="flex-1 bg-transparent px-2.5 py-1.5 text-xs font-mono text-[#e2e8f0] placeholder-zinc-500 focus:outline-none"
+          placeholder="Message..."
           value={text}
           maxLength={200}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKey}
         />
         <button
-          className="p-2 rounded-xl bg-blue-600/90 hover:bg-blue-500 text-white transition-all disabled:opacity-30 disabled:hover:bg-blue-600 shadow-sm active:scale-95 flex items-center justify-center flex-shrink-0"
+          type="button"
+          className="p-2 rounded-xl bg-amber-500/80 hover:bg-amber-500 text-[#111318] transition-colors disabled:opacity-30 disabled:hover:bg-amber-500/80 flex items-center justify-center flex-shrink-0 cursor-pointer"
           onClick={send}
           disabled={!text.trim()}
           title="Send message"
